@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>System Design Podcast — Two AI hosts break down system design in 10 minutes</title>
+  <meta name="description" content="Two AI hosts break down system design in 10 minutes. AI-generated, interview-focused, covering real-world architectures from Google, Netflix, Uber, and more." />
+  <meta property="og:title" content="System Design Podcast" />
+  <meta property="og:description" content="Two AI hosts break down system design in 10 minutes." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://yushengauggie.github.io/system-design-podcast" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="alternate" type="application/rss+xml" title="System Design Podcast RSS" href="feed.xml" />
+</head>
+<body>
+
+<!-- ── Header ── -->
+<header class="site-header">
+  <div class="container">
+    <div class="logo">
+      <div class="logo-icon">🎙️</div>
+      <h1>System Design Podcast</h1>
+    </div>
+    <p class="tagline">Two AI hosts break down system design in 10 minutes</p>
+    <nav class="header-links" aria-label="External links">
+      <a href="https://github.com/YushengAuggie/system-design-podcast" class="btn-outline" target="_blank" rel="noopener">
+        ⭐ GitHub
+      </a>
+      <a href="#" class="btn-outline" aria-label="Listen on Spotify (coming soon)">
+        🎧 Spotify
+      </a>
+      <a href="#" class="btn-outline" aria-label="Watch on YouTube (coming soon)">
+        ▶ YouTube
+      </a>
+      <a href="feed.xml" class="btn-primary">
+        📡 RSS Feed
+      </a>
+    </nav>
+  </div>
+</header>
+
+<!-- ── Sticky Nav ── -->
+<nav class="site-nav" aria-label="Page sections">
+  <div class="container">
+    <a href="#episodes" class="active">Episodes</a>
+    <a href="#about">About</a>
+    <a href="https://github.com/YushengAuggie/system-design-podcast" target="_blank" rel="noopener">GitHub ↗</a>
+  </div>
+</nav>
+
+<!-- ── Episodes ── -->
+<section id="episodes">
+  <div class="container">
+    <h2 class="section-title">Episodes</h2>
+    <p class="section-subtitle">New episodes generated automatically — each one a 10-minute deep dive into a system design topic.</p>
+
+    <div class="episodes-grid" id="episodes-grid">
+<!-- EPISODES_START -->
+      <article class="episode-card">
+        <a href="01-url-shortener/index.html">
+          <div class="card-diagram"><div class="card-diagram-placeholder">🏗️<span>Diagram</span></div></div>
+        </a>
+        <div class="card-body">
+          <div class="card-meta">
+            <span class="badge badge-season">S1</span>
+            <span class="badge badge-episode">E01</span>
+          </div>
+          <h3 class="card-title"><a href="01-url-shortener/index.html">URL Shortener</a></h3>
+          <p class="card-description">Design a scalable URL shortener like bit.ly — covering hashing, redirects, and analytics at scale.</p>
+          
+        </div>
+        <div class="card-footer">
+          <a href="01-url-shortener/index.html">Listen &amp; read →</a>
+        </div>
+      </article>
+      <article class="episode-card">
+        <a href="02-rate-limiter/index.html">
+          <div class="card-diagram"><div class="card-diagram-placeholder">🏗️<span>Diagram</span></div></div>
+        </a>
+        <div class="card-body">
+          <div class="card-meta">
+            <span class="badge badge-season">S1</span>
+            <span class="badge badge-episode">E02</span>
+          </div>
+          <h3 class="card-title"><a href="02-rate-limiter/index.html">Rate Limiter</a></h3>
+          <p class="card-description">Build a distributed rate limiter using token buckets, sliding windows, and Redis counters.</p>
+          
+        </div>
+        <div class="card-footer">
+          <a href="02-rate-limiter/index.html">Listen &amp; read →</a>
+        </div>
+      </article>
+      <article class="episode-card">
+        <a href="03-distributed-cache/index.html">
+          <div class="card-diagram"><div class="card-diagram-placeholder">🏗️<span>Diagram</span></div></div>
+        </a>
+        <div class="card-body">
+          <div class="card-meta">
+            <span class="badge badge-season">S1</span>
+            <span class="badge badge-episode">E03</span>
+          </div>
+          <h3 class="card-title"><a href="03-distributed-cache/index.html">Distributed Cache</a></h3>
+          <p class="card-description">Cache invalidation, eviction policies, and consistent hashing in a system like Memcached or Redis.</p>
+          
+        </div>
+        <div class="card-footer">
+          <a href="03-distributed-cache/index.html">Listen &amp; read →</a>
+        </div>
+      </article>
+<!-- EPISODES_END -->
+    </div>
+  </div>
+</section>
+
+<!-- ── About ── -->
+<section id="about">
+  <div class="container">
+    <h2 class="section-title">About the Show</h2>
+    <p class="section-subtitle">Fully AI-generated, interview-focused system design discussions</p>
+
+    <div class="about-grid">
+      <div class="about-text">
+        <p>
+          <strong style="color:var(--cream);">System Design Podcast</strong> is an experiment in AI-generated technical education.
+          Two AI hosts — Alex and Blake — discuss a system design topic each episode, covering
+          real-world architectures, trade-offs, and the kind of thinking that matters in
+          engineering interviews and on the job.
+        </p>
+        <p>
+          Each episode is fully generated by a Python pipeline: research phase, script writing,
+          quality review, multi-voice audio synthesis, and architecture diagram generation — all
+          automated. The result is a concise, interview-ready breakdown in about 10 minutes.
+        </p>
+        <p>
+          Topics come from real-world system design classics: URL shorteners, rate limiters,
+          distributed caches, search engines, notification systems, and more. Real engineering
+          blog references are woven in throughout.
+        </p>
+        <p>
+          <a href="https://github.com/YushengAuggie/system-design-podcast" target="_blank" rel="noopener" style="color:var(--warm-brown);">View the source code on GitHub →</a>
+        </p>
+      </div>
+
+      <div>
+        <h3 class="section-title" style="color:var(--cream); margin-bottom:20px;">Episode Format</h3>
+        <p style="color:var(--mid-tan); margin-bottom:20px; font-size:0.9rem;">Every episode follows five structured segments, designed to mirror how great engineers think through system design.</p>
+        <ul class="segments-list">
+          <li>
+            <div>
+              <span class="segment-name">Introduction</span>
+              <span class="segment-desc">Set the stage — what is this system and why does it matter?</span>
+            </div>
+          </li>
+          <li>
+            <div>
+              <span class="segment-name">Core Architecture</span>
+              <span class="segment-desc">High-level design, key components, and how data flows.</span>
+            </div>
+          </li>
+          <li>
+            <div>
+              <span class="segment-name">Deep Dive</span>
+              <span class="segment-desc">The hard parts — scaling, consistency, performance trade-offs.</span>
+            </div>
+          </li>
+          <li>
+            <div>
+              <span class="segment-name">Real-World Examples</span>
+              <span class="segment-desc">How Google, Netflix, Uber, and others actually built it.</span>
+            </div>
+          </li>
+          <li>
+            <div>
+              <span class="segment-name">Interview Angles</span>
+              <span class="segment-desc">What interviewers look for and common pitfalls to avoid.</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ── -->
+<footer class="site-footer">
+  <div class="container">
+    <p>
+      System Design Podcast · AI-generated ·
+      <a href="https://github.com/YushengAuggie/system-design-podcast" target="_blank" rel="noopener">GitHub</a> ·
+      <a href="feed.xml">RSS</a> ·
+      Built by <a href="https://yushengauggie.github.io" target="_blank" rel="noopener">Yusheng Ding</a>
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>

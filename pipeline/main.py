@@ -10,14 +10,17 @@ from pipeline.config import REVIEW_MAX_CYCLES
 from pipeline.quality import StepResult
 from pipeline.steps.audio import run_audio
 from pipeline.steps.diagram import run_diagram
+from pipeline.steps.podcast import run_podcast
 from pipeline.steps.research import run_research
 from pipeline.steps.review import run_review
 from pipeline.steps.script import run_script
 from pipeline.steps.voices import run_voices
+from pipeline.steps.website import run_website
+from pipeline.steps.youtube import run_youtube
 from pipeline.utils import episode_dir, load_json, load_text, save_json, save_text
 
 # Ordered pipeline steps
-STEPS = ["research", "script", "review", "voices", "audio", "diagram"]
+STEPS = ["research", "script", "review", "voices", "audio", "diagram", "youtube", "podcast", "website"]
 
 
 def _print_step(name: str, status: str, message: str = "") -> None:
@@ -207,6 +210,75 @@ def run_pipeline(
             print(f"\nWarning: Diagram generation failed — {diagram_result.message}")
             # Non-fatal: save what we have anyway
             save_text(ep_dir / "diagram.mmd", diagram_result.output)
+
+    # --- Step: YouTube Upload ---
+    if "youtube" in steps_to_run:
+        if not research_data:
+            research_path = ep_dir / "research.json"
+            if research_path.exists():
+                research_data = load_json(research_path)
+
+        _print_step("YouTube Upload", "running")
+        youtube_result = run_youtube(
+            episode_dir=ep_dir,
+            topic=topic,
+            season=season,
+            episode=episode,
+            research=research_data,
+            dry_run=dry_run,
+        )
+        _print_step(
+            "YouTube Upload",
+            "passed" if youtube_result.passed else "failed",
+            youtube_result.message,
+        )
+        if not youtube_result.passed:
+            print(f"\nWarning: YouTube upload failed — {youtube_result.message}")
+            # Non-fatal: pipeline still completes
+        elif not dry_run:
+            print(f"  Video URL: {youtube_result.output}")
+
+    # --- Step: Podcast RSS Feed ---
+    if "podcast" in steps_to_run:
+        if not research_data:
+            research_path = ep_dir / "research.json"
+            if research_path.exists():
+                research_data = load_json(research_path)
+
+        _print_step("Podcast RSS Feed", "running")
+        podcast_result = run_podcast(
+            episode_dir=ep_dir,
+            topic=topic,
+            season=season,
+            episode=episode,
+            research_data=research_data,
+            dry_run=dry_run,
+        )
+        _print_step(
+            "Podcast RSS Feed",
+            "passed" if podcast_result.passed else "failed",
+            podcast_result.message,
+        )
+        if not podcast_result.passed:
+            print(f"\nWarning: Podcast RSS step failed — {podcast_result.message}")
+            # Non-fatal: pipeline still completes
+        else:
+            print(f"  Feed updated: {podcast_result.output}")
+
+    # --- Step: Website Generation ---
+    if "website" in steps_to_run:
+        _print_step("Website Generation", "running")
+        website_result = run_website(dry_run=dry_run)
+        _print_step(
+            "Website Generation",
+            "passed" if website_result.passed else "failed",
+            website_result.message,
+        )
+        if not website_result.passed:
+            print(f"\nWarning: Website generation failed — {website_result.message}")
+            # Non-fatal: pipeline still completes
+        else:
+            print(f"  Website updated: {website_result.output}/")
 
     print("\nPipeline complete!")
     print(f"Outputs saved to: {ep_dir}/")

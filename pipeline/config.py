@@ -40,3 +40,21 @@ EXPECTED_SEGMENTS = 5
 
 # --- Output Directory ---
 EPISODES_DIR = "episodes"
+
+# --- Website ---
+WEBSITE_DIR = "website"
+WEBSITE_URL = "https://yushengauggie.github.io/system-design-podcast"
+
+# --- YouTube Upload ---
+YOUTUBE_CATEGORY_ID = "28"          # Science & Technology
+YOUTUBE_DEFAULT_PRIVACY = "unlisted"  # User manually publishes
+YOUTUBE_MIN_VIDEO_SIZE_BYTES = 100_000  # 100 KB sanity floor
+
+# --- Podcast Feed ---
+PODCAST_TITLE = "System Design Podcast"
+PODCAST_AUTHOR = "Yusheng Ding"
+PODCAST_WEBSITE = "https://yushengauggie.github.io/system-design-podcast"
+PODCAST_DESCRIPTION = "AI-generated conversational episodes breaking down system design concepts"
+PODCAST_FEED_FILE = "feed.xml"
+PODCAST_IMAGE_URL = "https://yushengauggie.github.io/system-design-podcast/cover.jpg"
+PODCAST_GITHUB_REPO = "YushengAuggie/system-design-podcast"

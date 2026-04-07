@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Distributed Cache — System Design Podcast S1E3</title>
+  <meta name="description" content="Cache invalidation, eviction policies, and consistent hashing in a system like Memcached or Redis." />
+  <meta property="og:title" content="Distributed Cache — System Design Podcast" />
+  <meta property="og:description" content="Cache invalidation, eviction policies, and consistent hashing in a system like Memcached or Redis." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://yushengauggie.github.io/system-design-podcast/03-distributed-cache" />
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+
+<!-- ── Episode Hero ── -->
+<header class="episode-hero">
+  <div class="container">
+    <p class="breadcrumb">
+      <a href="../index.html">System Design Podcast</a> › <span>S1E3</span>
+    </p>
+    <div class="episode-meta">
+      <span class="badge badge-season">Season 1</span>
+      <span class="badge badge-episode">Episode 3</span>
+    </div>
+    <h1>Distributed Cache</h1>
+    <p class="summary">Cache invalidation, eviction policies, and consistent hashing in a system like Memcached or Redis.</p>
+  </div>
+</header>
+
+<!-- ── Sticky Nav ── -->
+<nav class="site-nav" aria-label="Episode sections">
+  <div class="container">
+    <a href="../index.html">← All Episodes</a>
+    <a href="#player">Listen</a>
+    <a href="#diagram">Diagram</a>
+    <a href="#transcript">Transcript</a>
+    <a href="#references">References</a>
+  </div>
+</nav>
+
+<!-- ── Main Content ── -->
+<div class="container">
+  <div class="episode-layout">
+
+    <!-- Main column -->
+    <main class="episode-main">
+
+      <!-- Audio Player -->
+      <section id="player" class="episode-player">
+        <h2>🎧 Listen</h2>
+        <audio controls preload="metadata">
+          <source src="episode.mp3" type="audio/mpeg" />
+          Your browser does not support the audio element.
+        </audio>
+        <div class="listen-on">
+          <span style="font-size:0.8rem; color:var(--text-light); align-self:center;">Also on:</span>
+          <a href="#" class="listen-btn" aria-label="Spotify (coming soon)">🎧 Spotify</a>
+          <a href="#" class="listen-btn" aria-label="YouTube (coming soon)">▶ YouTube</a>
+          <a href="#" class="listen-btn" aria-label="Apple Podcasts (coming soon)">🎵 Apple Podcasts</a>
+        </div>
+      </section>
+
+      <!-- Architecture Diagram -->
+      <section id="diagram" class="episode-diagram">
+        <h2>🏗 Architecture Diagram</h2>
+<div class="mermaid-placeholder">Architecture diagram coming soon.</div>
+      </section>
+
+      <!-- Transcript -->
+      <section id="transcript" class="episode-transcript">
+        <button
+          class="transcript-toggle"
+          aria-expanded="false"
+          aria-controls="transcript-body"
+          onclick="this.setAttribute('aria-expanded', this.getAttribute('aria-expanded') === 'true' ? 'false' : 'true'); document.getElementById('transcript-body').classList.toggle('open');"
+        >
+          <span>📝 Full Script / Transcript</span>
+          <span class="chevron">▼</span>
+        </button>
+        <div id="transcript-body" class="transcript-content">
+<p>Transcript not available.</p>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Sidebar -->
+    <aside class="episode-sidebar">
+
+      <div class="sidebar-card">
+        <h3>References</h3>
+        <ul class="references-list" id="references">
+<li><span class="ref-company">Google</span><span class="ref-detail">Google&#x27;s Distributed Cache approach</span><a href="https://research.google/" target="_blank" rel="noopener">https://research.google/</a></li>
+<li><span class="ref-company">Netflix</span><span class="ref-detail">Netflix Distributed Cache at scale</span><a href="https://netflixtechblog.com/" target="_blank" rel="noopener">https://netflixtechblog.com/</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-card">
+        <h3>Episode Info</h3>
+        <p style="font-size:0.85rem; color:var(--text-light); line-height:1.6;">
+          <strong>Hosts:</strong> Alex &amp; Blake (AI)<br />
+          <strong>Season:</strong> 1<br />
+          <strong>Episode:</strong> 3<br />
+          <strong>Topic:</strong> Distributed Cache<br />
+          <strong>Format:</strong> 5 segments, ~10 minutes
+        </p>
+      </div>
+
+      <div class="sidebar-card">
+        <h3>More Episodes</h3>
+        <p style="font-size:0.85rem; color:var(--text-light);">
+          <a href="../index.html">← Back to all episodes</a>
+        </p>
+      </div>
+
+    </aside>
+  </div>
+</div>
+
+<!-- ── Footer ── -->
+<footer class="site-footer">
+  <div class="container">
+    <p>
+      System Design Podcast · AI-generated ·
+      <a href="https://github.com/YushengAuggie/system-design-podcast" target="_blank" rel="noopener">GitHub</a> ·
+      <a href="../feed.xml">RSS</a> ·
+      Built by <a href="https://yushengauggie.github.io" target="_blank" rel="noopener">Yusheng Ding</a>
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>

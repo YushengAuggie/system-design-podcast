@@ -1,0 +1,75 @@
+name: Security Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  security-audit:
+    name: Audit for secrets and unsafe files
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # need full history to scan git log
+
+      - name: Run security audit script
+        run: |
+          chmod +x scripts/security-audit.sh
+          bash scripts/security-audit.sh
+
+      - name: Scan git history for leaked secrets
+        run: |
+          echo "=== Scanning git history for secret patterns ==="
+          FOUND=0
+
+          # Patterns that suggest an actual secret value was committed
+          # (exclude placeholder values like "your-key-here", "xxx", "<...>")
+          MATCHES=$(git log --all -p --diff-filter=A \
+            | grep -iE '^\+(api_key|apikey|secret_key|access_token|auth_token|refresh_token|client_secret|private_key|password)\s*[=:]\s*["\047]?[A-Za-z0-9+/\-_]{16,}' \
+            | grep -vE '(your-|<|>|example|placeholder|CHANGE_ME|TODO|xxx|test|fake|dummy)' \
+            || true)
+
+          if [ -n "$MATCHES" ]; then
+            echo "::error::Possible secrets found in git history:"
+            echo "$MATCHES"
+            FOUND=1
+          else
+            echo "No secrets detected in git history."
+          fi
+
+          # Also catch raw OpenAI / Anthropic key formats
+          OPENAI_KEYS=$(git log --all -p | grep -oE 'sk-[A-Za-z0-9]{32,}' | head -5 || true)
+          if [ -n "$OPENAI_KEYS" ]; then
+            echo "::error::Possible OpenAI API key(s) found in git history!"
+            FOUND=1
+          fi
+
+          ANTHROPIC_KEYS=$(git log --all -p | grep -oE 'sk-ant-[A-Za-z0-9\-]{20,}' | head -5 || true)
+          if [ -n "$ANTHROPIC_KEYS" ]; then
+            echo "::error::Possible Anthropic API key(s) found in git history!"
+            FOUND=1
+          fi
+
+          if [ "$FOUND" -eq 1 ]; then
+            echo ""
+            echo "If secrets were accidentally committed, rotate them IMMEDIATELY."
+            echo "See SECURITY.md for rotation instructions."
+            exit 1
+          fi
+
+      - name: Verify .env.example exists and .env does not
+        run: |
+          if [ ! -f ".env.example" ]; then
+            echo "::error::.env.example is missing — add it so contributors know what vars are needed"
+            exit 1
+          fi
+          if [ -f ".env" ]; then
+            echo "::error::.env was committed — remove it immediately and rotate all secrets!"
+            exit 1
+          fi
+          echo ".env.example present, .env absent — OK"

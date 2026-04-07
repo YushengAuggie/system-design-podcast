@@ -1,0 +1,728 @@
+/* System Design Podcast — Warm Earth Palette */
+
+/* ── Reset & Base ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --dark:       #2d2a2e;
+  --cream:      #f5e6d3;
+  --warm-brown: #c9956b;
+  --muted-brown:#8b6d5c;
+  --light-tan:  #e8d5c4;
+  --mid-tan:    #d4b89a;
+  --text:       #3a2e28;
+  --text-light: #6b5448;
+  --white:      #fdfaf7;
+  --radius:     8px;
+  --shadow:     0 2px 12px rgba(45, 42, 46, 0.12);
+  --shadow-hover: 0 6px 24px rgba(45, 42, 46, 0.18);
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "SF Mono", "Fira Code", Consolas, "Courier New", monospace;
+  --max-width: 1100px;
+  --transition: 0.2s ease;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--text);
+  background: var(--cream);
+}
+
+a {
+  color: var(--warm-brown);
+  text-decoration: none;
+  transition: color var(--transition);
+}
+a:hover { color: var(--muted-brown); }
+
+img { max-width: 100%; display: block; }
+
+/* ── Layout ── */
+.container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ── Header / Hero ── */
+.site-header {
+  background: var(--dark);
+  color: var(--cream);
+  padding: 60px 0 48px;
+  text-align: center;
+}
+
+.site-header .logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.site-header .logo-icon {
+  width: 52px;
+  height: 52px;
+  background: var(--warm-brown);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  flex-shrink: 0;
+}
+
+.site-header h1 {
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--cream);
+  margin: 0;
+}
+
+.site-header .tagline {
+  font-size: 1.1rem;
+  color: var(--mid-tan);
+  max-width: 520px;
+  margin: 0 auto 32px;
+}
+
+.header-links {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.header-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 24px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background var(--transition), color var(--transition);
+}
+
+.btn-outline {
+  border: 1.5px solid rgba(245, 230, 211, 0.35);
+  color: var(--cream);
+}
+.btn-outline:hover {
+  background: rgba(245, 230, 211, 0.12);
+  color: var(--cream);
+}
+
+.btn-primary {
+  background: var(--warm-brown);
+  color: var(--white);
+  border: 1.5px solid var(--warm-brown);
+}
+.btn-primary:hover {
+  background: var(--muted-brown);
+  border-color: var(--muted-brown);
+  color: var(--white);
+}
+
+/* ── Navigation ── */
+.site-nav {
+  background: var(--white);
+  border-bottom: 1px solid var(--light-tan);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.site-nav .container {
+  display: flex;
+  gap: 0;
+}
+
+.site-nav a {
+  display: block;
+  padding: 14px 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-light);
+  border-bottom: 2px solid transparent;
+  transition: color var(--transition), border-color var(--transition);
+}
+.site-nav a:hover,
+.site-nav a.active {
+  color: var(--warm-brown);
+  border-bottom-color: var(--warm-brown);
+}
+
+/* ── Sections ── */
+section {
+  padding: 60px 0;
+}
+
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--dark);
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
+}
+
+.section-subtitle {
+  color: var(--text-light);
+  margin-bottom: 36px;
+  font-size: 0.95rem;
+}
+
+/* ── Episodes Section ── */
+#episodes {
+  background: var(--cream);
+}
+
+.episodes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+/* ── Episode Card ── */
+.episode-card {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  transition: box-shadow var(--transition), transform var(--transition);
+  display: flex;
+  flex-direction: column;
+}
+
+.episode-card:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px);
+}
+
+.episode-card a {
+  color: inherit;
+}
+
+.card-diagram {
+  aspect-ratio: 16 / 9;
+  background: var(--light-tan);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.card-diagram img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.card-diagram-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--muted-brown);
+  font-size: 2.5rem;
+  width: 100%;
+  height: 100%;
+}
+
+.card-diagram-placeholder span {
+  font-size: 0.8rem;
+  font-weight: 500;
+  opacity: 0.7;
+}
+
+.card-body {
+  padding: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 3px 9px;
+  border-radius: 20px;
+}
+
+.badge-season {
+  background: var(--light-tan);
+  color: var(--muted-brown);
+}
+
+.badge-episode {
+  background: var(--warm-brown);
+  color: var(--white);
+}
+
+.card-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--dark);
+  line-height: 1.35;
+}
+
+.card-description {
+  font-size: 0.875rem;
+  color: var(--text-light);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  flex: 1;
+}
+
+.card-audio {
+  margin-top: 4px;
+}
+
+.card-audio audio {
+  width: 100%;
+  height: 36px;
+  accent-color: var(--warm-brown);
+}
+
+.card-footer {
+  padding: 12px 20px;
+  border-top: 1px solid var(--light-tan);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-footer a {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--warm-brown);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.card-footer a:hover { color: var(--muted-brown); }
+
+/* ── Empty State ── */
+.episodes-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 80px 24px;
+  color: var(--text-light);
+}
+.episodes-empty .empty-icon {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 16px;
+  opacity: 0.6;
+}
+.episodes-empty p {
+  font-size: 1rem;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+/* ── About Section ── */
+#about {
+  background: var(--dark);
+  color: var(--cream);
+}
+
+#about .section-title {
+  color: var(--cream);
+}
+#about .section-subtitle {
+  color: var(--mid-tan);
+}
+
+.about-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: start;
+}
+
+.about-text p {
+  color: var(--light-tan);
+  margin-bottom: 16px;
+  font-size: 0.95rem;
+}
+
+.segments-list {
+  list-style: none;
+  counter-reset: segment;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.segments-list li {
+  counter-increment: segment;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: rgba(245, 230, 211, 0.06);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  border-left: 3px solid var(--warm-brown);
+}
+
+.segments-list li::before {
+  content: counter(segment);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--warm-brown);
+  color: var(--white);
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.segment-name {
+  font-weight: 700;
+  color: var(--cream);
+  font-size: 0.9rem;
+  display: block;
+}
+
+.segment-desc {
+  font-size: 0.8rem;
+  color: var(--mid-tan);
+  margin-top: 2px;
+  display: block;
+}
+
+/* ── Footer ── */
+.site-footer {
+  background: var(--dark);
+  border-top: 1px solid rgba(245, 230, 211, 0.1);
+  padding: 32px 0;
+  text-align: center;
+}
+
+.site-footer p {
+  font-size: 0.8rem;
+  color: var(--muted-brown);
+}
+
+.site-footer a {
+  color: var(--mid-tan);
+}
+.site-footer a:hover { color: var(--cream); }
+
+/* ── Episode Page Specific ── */
+.episode-hero {
+  background: var(--dark);
+  color: var(--cream);
+  padding: 48px 0 40px;
+}
+
+.episode-hero .breadcrumb {
+  font-size: 0.8rem;
+  color: var(--mid-tan);
+  margin-bottom: 16px;
+}
+.episode-hero .breadcrumb a { color: var(--warm-brown); }
+
+.episode-hero h1 {
+  font-size: clamp(1.5rem, 3vw, 2.2rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
+  color: var(--cream);
+}
+
+.episode-hero .episode-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.episode-hero .summary {
+  font-size: 1rem;
+  color: var(--light-tan);
+  max-width: 680px;
+  line-height: 1.7;
+}
+
+/* Episode Page Layout */
+.episode-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 40px;
+  padding: 48px 0;
+  align-items: start;
+}
+
+.episode-main { min-width: 0; }
+.episode-sidebar {}
+
+/* Audio Player Section */
+.episode-player {
+  background: var(--white);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: var(--shadow);
+  margin-bottom: 32px;
+}
+
+.episode-player h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--dark);
+  margin-bottom: 14px;
+}
+
+.episode-player audio {
+  width: 100%;
+  accent-color: var(--warm-brown);
+}
+
+.listen-on {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.listen-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: 1.5px solid var(--light-tan);
+  color: var(--text-light);
+  transition: background var(--transition), border-color var(--transition), color var(--transition);
+}
+.listen-btn:hover {
+  background: var(--warm-brown);
+  border-color: var(--warm-brown);
+  color: var(--white);
+}
+
+/* Diagram */
+.episode-diagram {
+  background: var(--white);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: var(--shadow);
+  margin-bottom: 32px;
+}
+
+.episode-diagram h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--dark);
+  margin-bottom: 16px;
+}
+
+.episode-diagram img {
+  width: 100%;
+  border-radius: 4px;
+}
+
+.mermaid-placeholder {
+  background: var(--light-tan);
+  border-radius: 4px;
+  padding: 40px 24px;
+  text-align: center;
+  color: var(--muted-brown);
+  font-size: 0.875rem;
+}
+
+/* Transcript */
+.episode-transcript {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.transcript-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--dark);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font);
+  border-bottom: 1px solid transparent;
+  transition: background var(--transition), border-color var(--transition);
+}
+
+.transcript-toggle:hover {
+  background: var(--cream);
+}
+
+.transcript-toggle[aria-expanded="true"] {
+  border-bottom-color: var(--light-tan);
+}
+
+.transcript-toggle .chevron {
+  font-size: 0.75rem;
+  transition: transform var(--transition);
+}
+
+.transcript-toggle[aria-expanded="true"] .chevron {
+  transform: rotate(180deg);
+}
+
+.transcript-content {
+  padding: 24px;
+  display: none;
+}
+
+.transcript-content.open {
+  display: block;
+}
+
+.transcript-content p,
+.transcript-content .host-line {
+  font-size: 0.9rem;
+  line-height: 1.7;
+  margin-bottom: 10px;
+}
+
+.host-a { color: var(--text); }
+.host-b { color: var(--muted-brown); }
+
+.host-label {
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: inline-block;
+  margin-right: 6px;
+  padding: 1px 7px;
+  border-radius: 10px;
+  background: var(--light-tan);
+  color: var(--muted-brown);
+  vertical-align: middle;
+}
+
+/* Sidebar */
+.sidebar-card {
+  background: var(--white);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+  margin-bottom: 20px;
+}
+
+.sidebar-card h3 {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--dark);
+  margin-bottom: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted-brown);
+}
+
+.references-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.references-list li {
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--light-tan);
+}
+.references-list li:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.references-list .ref-company {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--warm-brown);
+  margin-bottom: 3px;
+}
+
+.references-list .ref-detail {
+  font-size: 0.8rem;
+  color: var(--text-light);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.references-list a {
+  font-size: 0.75rem;
+  color: var(--warm-brown);
+  word-break: break-all;
+}
+
+/* ── Responsive ── */
+@media (max-width: 800px) {
+  .about-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .episode-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .episodes-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 540px) {
+  .site-header {
+    padding: 40px 0 32px;
+  }
+
+  section { padding: 40px 0; }
+
+  .header-links {
+    gap: 8px;
+  }
+
+  .header-links a {
+    padding: 7px 14px;
+    font-size: 0.8rem;
+  }
+}
