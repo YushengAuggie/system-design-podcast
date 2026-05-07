@@ -3,33 +3,34 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>System Design Podcast — Two AI hosts break down system design in 10 minutes</title>
-  <meta name="description" content="Two AI hosts break down system design in 10 minutes. AI-generated, interview-focused, covering real-world architectures from Google, Netflix, Uber, and more." />
-  <meta property="og:title" content="System Design Podcast" />
-  <meta property="og:description" content="Two AI hosts break down system design in 10 minutes." />
+  <title>Byte by Design — System design, broken down in 10 minutes</title>
+  <meta name="description" content="Two AI hosts break down system design in bite-sized episodes — like overhearing two senior engineers whiteboarding over coffee. 5-10 minutes, no fluff, interview-ready." />
+  <meta property="og:title" content="Byte by Design" />
+  <meta property="og:description" content="Two AI hosts break down system design in bite-sized episodes." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://yushengauggie.github.io/system-design-podcast" />
+  <meta property="og:image" content="https://yushengauggie.github.io/system-design-podcast/cover.jpg" />
   <link rel="stylesheet" href="style.css" />
-  <link rel="alternate" type="application/rss+xml" title="System Design Podcast RSS" href="feed.xml" />
+  <link rel="alternate" type="application/rss+xml" title="Byte by Design RSS" href="feed.xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
 
 <!-- ── Header ── -->
 <header class="site-header">
   <div class="container">
-    <div class="logo">
-      <div class="logo-icon">🎙️</div>
-      <h1>System Design Podcast</h1>
+    <div class="header-cover">
+      <img src="cover.jpg" alt="Byte by Design cover art" />
     </div>
-    <p class="tagline">Two AI hosts break down system design in 10 minutes</p>
+    <h1><span>Byte</span> by Design</h1>
+    <p class="tagline">Two AI hosts break down system design in bite-sized episodes — like overhearing two senior engineers whiteboarding over coffee.</p>
     <nav class="header-links" aria-label="External links">
       <a href="https://github.com/YushengAuggie/system-design-podcast" class="btn-outline" target="_blank" rel="noopener">
         ⭐ GitHub
       </a>
-      <a href="#" class="btn-outline" aria-label="Listen on Spotify (coming soon)">
-        🎧 Spotify
-      </a>
-      <a href="#" class="btn-outline" aria-label="Watch on YouTube (coming soon)">
+      <a href="#" class="btn-outline" aria-label="Listen on YouTube">
         ▶ YouTube
       </a>
       <a href="feed.xml" class="btn-primary">
@@ -52,13 +53,13 @@
 <section id="episodes">
   <div class="container">
     <h2 class="section-title">Episodes</h2>
-    <p class="section-subtitle">New episodes generated automatically — each one a 10-minute deep dive into a system design topic.</p>
+    <p class="section-subtitle">New episodes drop regularly — each one a 10-minute deep dive into a system design topic, interview-ready.</p>
 
     <div class="episodes-grid" id="episodes-grid">
 <!-- EPISODES_START -->
       <article class="episode-card">
         <a href="url-shortener/index.html">
-          <div class="card-diagram"><div class="card-diagram-placeholder">🏗️<span>Diagram</span></div></div>
+          <div class="card-diagram"><div class="card-diagram-placeholder">🔗<span>URL Shortener</span></div></div>
         </a>
         <div class="card-body">
           <div class="card-meta">
@@ -66,11 +67,11 @@
             <span class="badge badge-episode">E01</span>
           </div>
           <h3 class="card-title"><a href="url-shortener/index.html">URL Shortener</a></h3>
-          <p class="card-description">URL shorteners like bit.ly and tinyurl.com appear simple but involve complex system design challenges including distributed ID generation, caching strategies, and handling massive read/write ratios at scale.</p>
+          <p class="card-description">URL shorteners look simple until you realize Bitly handles 600 million clicks a month. Distributed ID generation, caching at scale, abuse detection — it's a masterclass in read-heavy systems.</p>
           <div class="card-audio"><audio controls preload="none"><source src="url-shortener/episode.mp3" type="audio/mpeg" /></audio></div>
         </div>
         <div class="card-footer">
-          <a href="url-shortener/index.html">Listen &amp; read →</a>
+          <a href="url-shortener/index.html">Listen & read →</a>
         </div>
       </article>
 <!-- EPISODES_END -->
@@ -82,63 +83,62 @@
 <section id="about">
   <div class="container">
     <h2 class="section-title">About the Show</h2>
-    <p class="section-subtitle">Fully AI-generated, interview-focused system design discussions</p>
+    <p class="section-subtitle">AI-generated, interview-focused system design discussions</p>
 
     <div class="about-grid">
       <div class="about-text">
         <p>
-          <strong style="color:var(--cream);">System Design Podcast</strong> is an experiment in AI-generated technical education.
-          Two AI hosts — Alex and Blake — discuss a system design topic each episode, covering
-          real-world architectures, trade-offs, and the kind of thinking that matters in
-          engineering interviews and on the job.
+          <strong>Byte by Design</strong> is a system design podcast where two AI hosts geek out over
+          distributed systems, scalability challenges, and the engineering decisions behind products
+          used by billions of people.
         </p>
         <p>
-          Each episode is fully generated by a Python pipeline: research phase, script writing,
-          quality review, multi-voice audio synthesis, and architecture diagram generation — all
-          automated. The result is a concise, interview-ready breakdown in about 10 minutes.
+          Each episode is fully generated by a Python pipeline: research, script writing with humor
+          and personality, a three-agent quality review panel, multi-voice audio synthesis, and
+          architecture diagram generation — all automated end to end.
         </p>
         <p>
-          Topics come from real-world system design classics: URL shorteners, rate limiters,
-          distributed caches, search engines, notification systems, and more. Real engineering
-          blog references are woven in throughout.
+          Topics range from classic interview problems (URL shorteners, chat systems) to modern
+          infrastructure (LLM serving, vector databases, serverless platforms). Every episode
+          references real engineering blogs from companies like Google, Netflix, Stripe, and Uber.
         </p>
         <p>
-          <a href="https://github.com/YushengAuggie/system-design-podcast" target="_blank" rel="noopener" style="color:var(--warm-brown);">View the source code on GitHub →</a>
+          <a href="https://github.com/YushengAuggie/system-design-podcast" target="_blank" rel="noopener">View the source on GitHub →</a>
         </p>
       </div>
 
       <div>
-        <h3 class="section-title" style="color:var(--cream); margin-bottom:20px;">Episode Format</h3>
-        <p style="color:var(--mid-tan); margin-bottom:20px; font-size:0.9rem;">Every episode follows five structured segments, designed to mirror how great engineers think through system design.</p>
+        <h3 class="section-title" style="margin-bottom:20px;">Episode Format</h3>
+        <p style="color:var(--text-dim); margin-bottom:20px; font-size:0.9rem;">Every episode follows five structured segments.</p>
         <ul class="segments-list">
           <li>
             <div>
-              <span class="segment-name">Introduction</span>
-              <span class="segment-desc">Set the stage — what is this system and why does it matter?</span>
+              <span class="segment-name">🎯 The Problem</span>
+              <span class="segment-desc">Why this system is interesting and harder than it looks.</span>
             </div>
           </li>
           <li>
             <div>
-              <span class="segment-name">Core Architecture</span>
-              <span class="segment-desc">High-level design, key components, and how data flows.</span>
+              <span class="segment-name">📋 Interview Framework</span>
+              <span class="segment-desc">Requirements, estimation, and the architecture sketch.</span>
             </div>
           </li>
           <li>
             <div>
-              <span class="segment-name">Deep Dive</span>
-              <span class="segment-desc">The hard parts — scaling, consistency, performance trade-offs.</span>
+              <span class="segment-name">🔬 Deep Dive</span>
+              <span class="segment-desc">The hard parts — scaling, trade-offs, what actually breaks.</span>
             </div>
           </li>
           <li>
             <div>
-              <span class="segment-name">Real-World Examples</span>
-              <span class="segment-desc">How Google, Netflix, Uber, and others actually built it.</span>
+              <span class="segment-name">🏭 How They Built It</span>
+              <span class="segment-desc">Real companies, real architecture, real war stories.</span>
             </div>
           </li>
           <li>
             <div>
-              <span class="segment-name">Interview Angles</span>
-              <span class="segment-desc">What interviewers look for and common pitfalls to avoid.</span>
+              <span class="segment-name">💡 Interview Tips</span>
+              <span class="segment-desc">What impresses interviewers and common pitfalls.</span>
             </div>
           </li>
         </ul>
@@ -151,7 +151,7 @@
 <footer class="site-footer">
   <div class="container">
     <p>
-      System Design Podcast · AI-generated ·
+      Byte by Design · AI-generated ·
       <a href="https://github.com/YushengAuggie/system-design-podcast" target="_blank" rel="noopener">GitHub</a> ·
       <a href="feed.xml">RSS</a> ·
       Built by <a href="https://yushengauggie.github.io" target="_blank" rel="noopener">Yusheng Ding</a>
