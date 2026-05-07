@@ -52,17 +52,26 @@ def _run_fact_checker(script: str, research: dict) -> dict:
 # ---------------------------------------------------------------------------
 
 VIBE_SYSTEM = """\
-You are a podcast producer reviewing a script for broadcast quality. Evaluate:
-- Natural conversation flow (does it sound like two friends talking?)
-- Word choice (conversational, not textbook)
-- Entertainment value, pacing, hooks, energy
-- Would a listener stay engaged for the full episode?
+You are a podcast producer reviewing a script for broadcast quality. \
+This show ("Byte by Design") should sound like two engineer friends genuinely \
+geeking out — funny, sharp, and real. NOT a textbook, NOT a Q&A interview.
+
+Evaluate:
+- Does it sound like a REAL human conversation? (interruptions, reactions, disagreements)
+- Is there genuine humor? (analogies, light roasts, sarcasm, callbacks — not forced jokes)
+- Energy and pacing: does it hook you in the first 30 seconds?
+- Would YOU actually listen to this on a commute, or would you skip it?
+- Are there moments of surprise, drama, or "oh wow" that keep attention?
+- Do the hosts have distinct personalities, or do they sound like the same person?
+
+Be TOUGH. A score of 7 means "good enough to publish." A 10 means "I'd share this."
+If it reads like a Wikipedia article with speaker labels, that's a 3.
 
 Return your review as:
 VIBE_SCORE: [1-10]
 VERDICT: PASS or FAIL (must score >= 7 to pass)
 FEEDBACK:
-- (specific feedback points)
+- (specific, actionable feedback points)
 """
 
 

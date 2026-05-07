@@ -6,10 +6,10 @@ OPENAI_TTS_MODEL = "gpt-4o-mini-tts"
 
 # --- Voice Rotation ---
 SEASON_VOICES: dict[int, tuple[str, str]] = {
-    1: ("ash", "nova"),
-    2: ("echo", "coral"),
-    3: ("onyx", "shimmer"),
-    4: ("sage", "fable"),
+    1: ("echo", "nova"),
+    2: ("echo", "nova"),
+    3: ("echo", "nova"),
+    4: ("echo", "nova"),
 }
 
 HOST_A_VOICES = ["alloy", "echo", "onyx", "ash", "sage"]
@@ -51,10 +51,10 @@ YOUTUBE_DEFAULT_PRIVACY = "unlisted"  # User manually publishes
 YOUTUBE_MIN_VIDEO_SIZE_BYTES = 100_000  # 100 KB sanity floor
 
 # --- Podcast Feed ---
-PODCAST_TITLE = "System Design Podcast"
+PODCAST_TITLE = "Byte by Design"
 PODCAST_AUTHOR = "Yusheng Ding"
 PODCAST_WEBSITE = "https://yushengauggie.github.io/system-design-podcast"
-PODCAST_DESCRIPTION = "AI-generated conversational episodes breaking down system design concepts"
+PODCAST_DESCRIPTION = "Two AI hosts break down system design in bite-sized episodes — like overhearing two senior engineers whiteboarding over coffee. Each episode tackles a real interview topic: from URL shorteners to LLM serving platforms, covering requirements, architecture, trade-offs, and how companies like Netflix, Stripe, and Google actually built it. 5-10 minutes, no fluff, interview-ready."
 PODCAST_FEED_FILE = "feed.xml"
 PODCAST_IMAGE_URL = "https://yushengauggie.github.io/system-design-podcast/cover.jpg"
 PODCAST_GITHUB_REPO = "YushengAuggie/system-design-podcast"
