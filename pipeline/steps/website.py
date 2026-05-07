@@ -187,13 +187,14 @@ def _render_references_html(research: dict) -> str:
 # ── Episode Page ──────────────────────────────────────────────────────────────
 
 
-def _get_audio_url(ep_dir: Path, season: int, episode: int) -> str:
-    """Get the audio URL — prefer GitHub Release, fall back to local."""
-    from pipeline.config import PODCAST_GITHUB_REPO
-    release_tag = f"ep-{season}-{episode}"
-    release_url = f"https://github.com/{PODCAST_GITHUB_REPO}/releases/download/{release_tag}/episode.mp3"
-    # Always prefer the release URL since mp3 is in .gitignore
-    return release_url
+def _get_audio_url_relative(slug: str) -> str:
+    """Get relative audio URL for main index page."""
+    return f"{slug}/episode.mp3"
+
+
+def _get_audio_url_episode() -> str:
+    """Get audio URL for episode page (same directory)."""
+    return "episode.mp3"
 
 
 def _build_listen_links(ep_dir: Path) -> str:
@@ -233,7 +234,12 @@ def _render_episode_page(info: dict, website_dir: Path, template: str) -> Path:
     summary = research.get("summary", f"A 10-minute deep dive into {topic}.")
 
     # Audio: use GitHub Release URL (mp3 is in .gitignore)
-    audio_url = _get_audio_url(ep_dir, season, episode)
+    # Copy audio to website dir (force-included in git via !docs/**/*.mp3)
+    audio_src = ep_dir / "episode.mp3"
+    if audio_src.exists():
+        shutil.copy2(audio_src, ep_out_dir / "episode.mp3")
+
+    audio_url = _get_audio_url_episode()
 
     # YouTube link if available
     listen_links = _build_listen_links(ep_dir)
@@ -283,7 +289,7 @@ def _render_episode_card(info: dict, website_dir: Path) -> str:
     else:
         thumbnail = '<div class="card-diagram-placeholder">🏗️<span>Diagram</span></div>'
 
-    card_audio_url = _get_audio_url(ep_dir, season, episode_num)
+    card_audio_url = _get_audio_url_relative(slug)
     audio_html = (
         '<div class="card-audio">'
         f'<audio controls preload="none"><source src="{card_audio_url}" type="audio/mpeg" /></audio>'

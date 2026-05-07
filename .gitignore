@@ -17,3 +17,5 @@ episodes/
 credentials/
 token.json
 client_secret*.json
+# Force-include episode audio files for GitHub Pages streaming
+!docs/**/*.mp3

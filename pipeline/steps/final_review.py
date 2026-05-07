@@ -274,7 +274,7 @@ def _check_5_website(ep_dir: Path, topic: str) -> list[dict]:
 
 
 def _check_6_audio_url(ep_dir: Path, topic: str) -> list[dict]:
-    """[6] AUDIO URL — Must use GitHub Release URL, not local file."""
+    """[6] AUDIO URL — MP3 must exist in docs/ for GitHub Pages streaming."""
     issues = []
     slug = slugify(topic)
     ep_web_dir = Path(WEBSITE_DIR) / slug
@@ -285,22 +285,31 @@ def _check_6_audio_url(ep_dir: Path, topic: str) -> list[dict]:
     content = index_html.read_text()
     audio_srcs = re.findall(r'<source\s+src="([^"]+)"', content)
 
-    for src in audio_srcs:
-        if src.startswith("http"):
-            continue  # Good — remote URL
-        if src.endswith(".mp3"):
-            issues.append({
-                "check": 6, "severity": "error", "category": "audio_local_ref",
-                "message": f"Audio uses local path '{src}' — will break on GitHub Pages (mp3 in .gitignore)",
-                "fixable": True, "fix": "fix_audio_url",
-            })
-
     if not audio_srcs:
         issues.append({
             "check": 6, "severity": "warning", "category": "audio_no_source",
             "message": "No audio source tag found in episode page",
             "fixable": False,
         })
+        return issues
+
+    for src in audio_srcs:
+        if src.startswith("http"):
+            # GitHub Release URLs don't stream properly (attachment disposition)
+            issues.append({
+                "check": 6, "severity": "error", "category": "audio_remote_ref",
+                "message": f"Audio uses remote URL '{src[:60]}...' — GitHub Release URLs don't stream in browsers",
+                "fixable": True, "fix": "fix_audio_url_local",
+            })
+        elif src.endswith(".mp3"):
+            # Local ref is correct — but verify the file exists in docs/
+            mp3_path = ep_web_dir / src
+            if not mp3_path.exists():
+                issues.append({
+                    "check": 6, "severity": "error", "category": "audio_file_missing",
+                    "message": f"Audio source '{src}' referenced but file missing from docs/{slug}/",
+                    "fixable": True, "fix": "copy_audio",
+                })
 
     return issues
 
@@ -548,19 +557,23 @@ def _apply_fixes(
                 page.write_text(content)
                 fixes.append("Fixed stale CSS variables")
 
-        elif fix == "fix_audio_url":
+        elif fix == "fix_audio_url_local":
             page = ep_web_dir / "index.html"
             if page.exists():
-                release_tag = f"ep-{season}-{episode}"
-                release_url = f"https://github.com/{PODCAST_GITHUB_REPO}/releases/download/{release_tag}/episode.mp3"
                 content = page.read_text()
                 content = re.sub(
-                    r'<source\s+src="(?!http)[^"]*\.mp3"',
-                    f'<source src="{release_url}"',
+                    r'<source\s+src="https?://[^"]*\.mp3"',
+                    '<source src="episode.mp3"',
                     content,
                 )
                 page.write_text(content)
-                fixes.append(f"Fixed audio URL → GitHub Release ({release_tag})")
+                fixes.append("Fixed audio URL → local episode.mp3")
+
+        elif fix == "copy_audio":
+            src = ep_dir / "episode.mp3"
+            if src.exists() and ep_web_dir.exists():
+                shutil.copy2(src, ep_web_dir / "episode.mp3")
+                fixes.append("Copied episode.mp3 to docs/")
 
         elif fix == "fix_youtube_link":
             yt_path = ep_dir / "youtube.json"
@@ -585,16 +598,14 @@ def _apply_fixes(
         elif fix == "fix_index_audio":
             index = website_dir / "index.html"
             if index.exists():
-                release_tag = f"ep-{season}-{episode}"
-                release_url = f"https://github.com/{PODCAST_GITHUB_REPO}/releases/download/{release_tag}/episode.mp3"
                 content = index.read_text()
                 content = re.sub(
-                    r'<source\s+src="(?!http)[^"]*\.mp3"',
-                    f'<source src="{release_url}"',
+                    r'<source\s+src="https?://[^"]*\.mp3"',
+                    f'<source src="{slug}/episode.mp3"',
                     content,
                 )
                 index.write_text(content)
-                fixes.append("Fixed main page audio URL → GitHub Release")
+                fixes.append(f"Fixed main page audio URL → {slug}/episode.mp3")
 
         elif fix == "copy_feed":
             # Copy feed.xml from project root to docs/ if it exists
