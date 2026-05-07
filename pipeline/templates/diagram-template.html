@@ -12,38 +12,40 @@
     color: #e0e0e0;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     min-height: 100vh;
-    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
 
-  /* ── Title ───────────────────────────────────── */
   .diagram-title {
     text-align: center;
-    padding: 20px 16px 8px;
-    font-size: 1.35rem;
+    padding: 16px 16px 4px;
+    font-size: 1.2rem;
     font-weight: 700;
     letter-spacing: -0.02em;
     color: #ffffff;
     text-shadow: 0 0 30px rgba(108, 99, 255, 0.25);
+    flex-shrink: 0;
   }
 
-  /* ── Canvas ──────────────────────────────────── */
   .canvas-wrap {
-    position: relative;
+    flex: 1;
     width: 100%;
-    height: calc(100vh - 110px);
-    overflow: hidden;
+    overflow: auto;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 8px 12px;
   }
 
   svg.diagram-svg {
-    width: 100%;
-    height: 100%;
+    display: block;
   }
 
-  /* ── Nodes ───────────────────────────────────── */
+  /* ── Nodes ── */
   .node-group { cursor: pointer; }
 
   .node-rect {
-    rx: 10; ry: 10;
+    rx: 8; ry: 8;
     stroke-width: 1.5;
     transition: filter 0.25s, stroke-width 0.25s;
   }
@@ -51,14 +53,14 @@
   .node-group:hover .node-rect,
   .node-group.highlighted .node-rect {
     stroke-width: 2.5;
-    filter: drop-shadow(0 0 12px var(--node-color));
+    filter: drop-shadow(0 0 10px var(--node-color));
   }
 
-  .node-group.dimmed { opacity: 0.18; transition: opacity 0.3s; }
+  .node-group.dimmed { opacity: 0.12; transition: opacity 0.3s; }
   .node-group:not(.dimmed) { transition: opacity 0.3s; }
 
   .node-icon {
-    font-size: 16px;
+    font-size: 13px;
     text-anchor: middle;
     dominant-baseline: central;
     pointer-events: none;
@@ -66,152 +68,116 @@
 
   .node-label {
     fill: #ffffff;
-    font-size: 12px;
+    font-size: 10.5px;
     font-weight: 600;
     text-anchor: middle;
     dominant-baseline: central;
     pointer-events: none;
   }
 
-  /* ── Edges ───────────────────────────────────── */
-  .edge-line {
-    stroke: #444;
-    stroke-width: 1.5;
+  /* ── Edges ── */
+  .edge-path {
+    stroke: #555;
+    stroke-width: 1.2;
     fill: none;
     transition: stroke 0.25s, stroke-width 0.25s;
     marker-end: url(#arrowhead);
   }
 
-  .edge-line.highlighted {
+  .edge-path.highlighted {
     stroke: #6c63ff;
-    stroke-width: 2.5;
+    stroke-width: 2;
     stroke-dasharray: 6 3;
     animation: dash-flow 0.6s linear infinite;
+    marker-end: url(#arrowhead-hl);
   }
 
-  .edge-line.dimmed { opacity: 0.08; transition: opacity 0.3s; }
-  .edge-line:not(.dimmed) { transition: opacity 0.3s; }
+  .edge-path.dimmed { opacity: 0.06; transition: opacity 0.3s; }
 
-  @keyframes dash-flow {
-    to { stroke-dashoffset: -9; }
-  }
+  @keyframes dash-flow { to { stroke-dashoffset: -9; } }
 
   .edge-label {
     fill: #888;
-    font-size: 10px;
+    font-size: 8px;
     text-anchor: middle;
     dominant-baseline: central;
     pointer-events: none;
-    transition: fill 0.25s;
   }
+  .edge-label.highlighted { fill: #bbb; }
+  .edge-label.dimmed { opacity: 0.06; }
 
-  .edge-label.highlighted { fill: #aaa; }
-  .edge-label.dimmed { opacity: 0.08; }
+  .edge-label-bg {
+    fill: #0f0f0f;
+    opacity: 0.85;
+  }
+  .edge-label-bg.dimmed { opacity: 0.06; }
 
-  /* ── Groups ──────────────────────────────────── */
+  /* ── Groups ── */
   .group-rect {
-    fill: rgba(255, 255, 255, 0.02);
-    stroke: rgba(255, 255, 255, 0.12);
-    stroke-dasharray: 6 4;
-    rx: 12; ry: 12;
+    fill: rgba(255,255,255,0.018);
+    stroke: rgba(255,255,255,0.12);
+    stroke-dasharray: 5 3;
+    rx: 10; ry: 10;
   }
-
   .group-label {
-    fill: rgba(255, 255, 255, 0.35);
-    font-size: 11px;
-    font-weight: 600;
+    fill: rgba(255,255,255,0.35);
+    font-size: 9px;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.1em;
   }
 
-  /* ── Tooltip ─────────────────────────────────── */
+  /* ── Tooltip ── */
   .tooltip {
     position: fixed;
     background: #1a1a2e;
-    border: 1px solid rgba(108, 99, 255, 0.4);
+    border: 1px solid rgba(108,99,255,0.4);
     border-radius: 10px;
-    padding: 14px 18px;
-    max-width: 300px;
+    padding: 12px 16px;
+    max-width: 280px;
     pointer-events: none;
     opacity: 0;
     transform: translateY(6px);
     transition: opacity 0.2s, transform 0.2s;
     z-index: 100;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
   }
-
-  .tooltip.visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  .tooltip-title {
-    font-weight: 700;
-    font-size: 0.9rem;
-    margin-bottom: 6px;
-    color: #fff;
-  }
-
+  .tooltip.visible { opacity: 1; transform: translateY(0); }
+  .tooltip-title { font-weight: 700; font-size: 0.85rem; margin-bottom: 4px; color: #fff; }
   .tooltip-type {
-    display: inline-block;
-    font-size: 0.65rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    padding: 2px 8px;
-    border-radius: 4px;
-    margin-bottom: 8px;
+    display: inline-block; font-size: 0.6rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    padding: 2px 7px; border-radius: 4px; margin-bottom: 6px;
   }
+  .tooltip-desc { font-size: 0.75rem; line-height: 1.45; color: #bbb; }
 
-  .tooltip-desc {
-    font-size: 0.8rem;
-    line-height: 1.45;
-    color: #bbb;
-  }
-
-  /* ── Legend ───────────────────────────────────── */
+  /* ── Legend ── */
   .legend {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 14px;
-    padding: 10px 16px 14px;
+    display: flex; flex-wrap: wrap; justify-content: center;
+    gap: 10px; padding: 6px 16px 10px; flex-shrink: 0;
   }
-
   .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.7rem;
-    color: #888;
-    text-transform: capitalize;
+    display: flex; align-items: center; gap: 4px;
+    font-size: 0.6rem; color: #777; text-transform: capitalize;
   }
-
-  .legend-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 3px;
-    flex-shrink: 0;
-  }
+  .legend-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
 </style>
 </head>
 <body>
 
 <div class="diagram-title" id="diagramTitle"></div>
-
 <div class="canvas-wrap">
-  <svg class="diagram-svg" id="svgCanvas">
+  <svg class="diagram-svg" id="svgCanvas" xmlns="http://www.w3.org/2000/svg">
     <defs>
-      <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-        <polygon points="0 0, 8 3, 0 6" fill="#555" />
+      <marker id="arrowhead" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+        <polygon points="0 0, 7 2.5, 0 5" fill="#555" />
       </marker>
-      <marker id="arrowhead-hl" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-        <polygon points="0 0, 8 3, 0 6" fill="#6c63ff" />
+      <marker id="arrowhead-hl" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+        <polygon points="0 0, 7 2.5, 0 5" fill="#6c63ff" />
       </marker>
     </defs>
   </svg>
 </div>
-
 <div class="legend" id="legend"></div>
 
 <div class="tooltip" id="tooltip">
@@ -221,118 +187,230 @@
 </div>
 
 <script>
-// ── Color & icon config ──────────────────────────
 const TYPE_COLORS = {
-  client:     '#6c63ff',
-  server:     '#4ecdc4',
-  database:   '#ff6b6b',
-  cache:      '#ffd93d',
-  queue:      '#95e1d3',
-  service:    '#a78bfa',
-  storage:    '#f38181',
-  external:   '#888888',
-  monitoring: '#45b7d1'
+  client:'#6c63ff', server:'#4ecdc4', database:'#ff6b6b', cache:'#ffd93d',
+  queue:'#95e1d3', service:'#a78bfa', storage:'#f38181', external:'#888888',
+  monitoring:'#45b7d1'
 };
-
 const TYPE_ICONS = {
-  client:     '👤',
-  server:     '⚙️',
-  database:   '🗄️',
-  cache:      '⚡',
-  queue:      '📨',
-  service:    '🔧',
-  storage:    '💾',
-  external:   '🌐',
-  monitoring: '📊'
+  client:'👤', server:'⚙️', database:'🗄️', cache:'⚡', queue:'📨',
+  service:'🔧', storage:'💾', external:'🌐', monitoring:'📊'
 };
 
-// ── Data injection ───────────────────────────────
 const DATA = {{DIAGRAM_DATA}};
 
-// ── Layout engine (force-directed-ish) ───────────
-function layoutNodes(nodes, edges, groups, width, height) {
-  const padding = 60;
-  const nodeW = 140, nodeH = 52;
-  const usableW = width - padding * 2 - nodeW;
-  const usableH = height - padding * 2 - nodeH;
+/* ─── Group-aware layout engine ─── */
+function layoutNodes(nodes, edges, groups) {
+  const nodeW = 150, nodeH = 42;
+  const hGap = 30, vGap = 55;
+  const groupPadX = 20, groupPadY = 28, groupLabelH = 18;
+  const canvasPad = 30;
 
-  // Build adjacency for layering
-  const outgoing = {};
-  const incoming = {};
+  // Build group membership map
+  const nodeGroup = {};  // nodeId → groupIndex
+  (groups || []).forEach((g, gi) => {
+    (g.nodeIds || []).forEach(nid => { nodeGroup[nid] = gi; });
+  });
+
+  // Adjacency
+  const outgoing = {}, incoming = {};
   nodes.forEach(n => { outgoing[n.id] = []; incoming[n.id] = []; });
   edges.forEach(e => {
     if (outgoing[e.from]) outgoing[e.from].push(e.to);
     if (incoming[e.to]) incoming[e.to].push(e.from);
   });
 
-  // Topological layering (BFS from roots)
-  const layers = {};
-  const roots = nodes.filter(n => incoming[n.id].length === 0).map(n => n.id);
-  if (roots.length === 0 && nodes.length > 0) roots.push(nodes[0].id);
+  // If groups exist, lay out by group rows
+  // Each group becomes a row, arranged top-to-bottom
+  // Within each group, nodes arranged left-to-right
+  // Ungrouped nodes get their own row at the end
 
-  const visited = new Set();
-  let queue = roots.map(id => ({ id, layer: 0 }));
-  let maxLayer = 0;
-
-  while (queue.length > 0) {
-    const next = [];
-    for (const { id, layer } of queue) {
-      if (visited.has(id)) continue;
-      visited.add(id);
-      layers[id] = layer;
-      if (layer > maxLayer) maxLayer = layer;
-      for (const child of (outgoing[id] || [])) {
-        if (!visited.has(child)) {
-          next.push({ id: child, layer: layer + 1 });
-        }
-      }
-    }
-    queue = next;
-  }
-
-  // Assign unvisited nodes to last layer
-  nodes.forEach(n => {
-    if (!visited.has(n.id)) {
-      maxLayer++;
-      layers[n.id] = maxLayer;
-    }
-  });
-
-  // Gather nodes per layer
-  const layerBuckets = {};
-  nodes.forEach(n => {
-    const l = layers[n.id] || 0;
-    if (!layerBuckets[l]) layerBuckets[l] = [];
-    layerBuckets[l].push(n);
-  });
-
-  const numLayers = maxLayer + 1;
   const positions = {};
 
-  Object.keys(layerBuckets).forEach(l => {
-    const bucket = layerBuckets[l];
-    const layerIdx = parseInt(l);
-    const y = padding + (numLayers > 1 ? (layerIdx / (numLayers - 1)) * usableH : usableH / 2);
-    const count = bucket.length;
-    bucket.forEach((n, i) => {
-      const x = padding + (count > 1 ? (i / (count - 1)) * usableW : usableW / 2);
-      positions[n.id] = { x, y, w: nodeW, h: nodeH };
-    });
-  });
+  if (groups && groups.length > 0) {
+    let currentY = canvasPad;
+    let maxW = 0;
 
-  return positions;
+    const groupBounds = []; // for drawing group boxes later
+
+    groups.forEach((g, gi) => {
+      const gNodes = (g.nodeIds || []).map(id => nodes.find(n => n.id === id)).filter(Boolean);
+      if (gNodes.length === 0) return;
+
+      const rowTop = currentY;
+      const nodesY = rowTop + groupLabelH + groupPadY;
+      const rowW = gNodes.length * nodeW + (gNodes.length - 1) * hGap;
+      if (rowW > maxW) maxW = rowW;
+
+      gNodes.forEach((n, i) => {
+        positions[n.id] = {
+          x: groupPadX + i * (nodeW + hGap),
+          y: nodesY,
+          w: nodeW,
+          h: nodeH
+        };
+      });
+
+      groupBounds.push({
+        gi, label: g.label,
+        top: rowTop,
+        bottom: nodesY + nodeH + groupPadY,
+        nodeCount: gNodes.length
+      });
+
+      currentY = nodesY + nodeH + groupPadY + vGap;
+    });
+
+    // Ungrouped nodes
+    const ungrouped = nodes.filter(n => nodeGroup[n.id] === undefined);
+    if (ungrouped.length > 0) {
+      const rowW = ungrouped.length * nodeW + (ungrouped.length - 1) * hGap;
+      if (rowW > maxW) maxW = rowW;
+      ungrouped.forEach((n, i) => {
+        positions[n.id] = {
+          x: groupPadX + i * (nodeW + hGap),
+          y: currentY,
+          w: nodeW,
+          h: nodeH
+        };
+      });
+      currentY += nodeH + vGap;
+    }
+
+    // Now center each row horizontally
+    const totalW = maxW + groupPadX * 2 + canvasPad * 2;
+
+    groups.forEach(g => {
+      const gNodes = (g.nodeIds || []).map(id => nodes.find(n => n.id === id)).filter(Boolean);
+      if (gNodes.length === 0) return;
+      const rowW = gNodes.length * nodeW + (gNodes.length - 1) * hGap;
+      const offsetX = (totalW - rowW) / 2 - groupPadX;
+      gNodes.forEach(n => {
+        if (positions[n.id]) positions[n.id].x += offsetX;
+      });
+    });
+
+    if (ungrouped.length > 0) {
+      const rowW = ungrouped.length * nodeW + (ungrouped.length - 1) * hGap;
+      const offsetX = (totalW - rowW) / 2 - groupPadX;
+      ungrouped.forEach(n => {
+        if (positions[n.id]) positions[n.id].x += offsetX;
+      });
+    }
+
+    const canvasW = totalW;
+    const canvasH = currentY - vGap + canvasPad;
+    return { positions, canvasW, canvasH };
+
+  } else {
+    // No groups — use BFS layering
+    const layers = {};
+    const roots = nodes.filter(n => incoming[n.id].length === 0).map(n => n.id);
+    if (roots.length === 0 && nodes.length > 0) roots.push(nodes[0].id);
+
+    const visited = new Set();
+    let queue = roots.map(id => ({ id, layer: 0 }));
+    let maxLayer = 0;
+
+    while (queue.length > 0) {
+      const next = [];
+      for (const { id, layer } of queue) {
+        if (visited.has(id)) continue;
+        visited.add(id);
+        layers[id] = Math.max(layers[id] || 0, layer);
+        if (layers[id] > maxLayer) maxLayer = layers[id];
+        for (const child of (outgoing[id] || [])) {
+          if (!visited.has(child)) next.push({ id: child, layer: layers[id] + 1 });
+        }
+      }
+      queue = next;
+    }
+
+    nodes.forEach(n => {
+      if (!visited.has(n.id)) { maxLayer++; layers[n.id] = maxLayer; }
+    });
+
+    const buckets = {};
+    nodes.forEach(n => {
+      const l = layers[n.id] || 0;
+      if (!buckets[l]) buckets[l] = [];
+      buckets[l].push(n);
+    });
+
+    const maxBucketSize = Math.max(...Object.values(buckets).map(b => b.length), 1);
+    const canvasW = maxBucketSize * (nodeW + hGap) - hGap + canvasPad * 2;
+    const canvasH = (maxLayer + 1) * (nodeH + vGap) - vGap + canvasPad * 2;
+
+    Object.entries(buckets).forEach(([l, bucket]) => {
+      const layerIdx = parseInt(l);
+      const y = canvasPad + layerIdx * (nodeH + vGap);
+      const totalW = bucket.length * nodeW + (bucket.length - 1) * hGap;
+      const startX = (canvasW - totalW) / 2;
+      bucket.forEach((n, i) => {
+        positions[n.id] = { x: startX + i * (nodeW + hGap), y, w: nodeW, h: nodeH };
+      });
+    });
+
+    return { positions, canvasW, canvasH };
+  }
 }
 
-// ── SVG helpers ──────────────────────────────────
+/* ── SVG helpers ── */
 const svgNS = 'http://www.w3.org/2000/svg';
-
-function createSVGElement(tag, attrs) {
+function svgEl(tag, attrs) {
   const el = document.createElementNS(svgNS, tag);
   for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
   return el;
 }
 
-// ── Render ───────────────────────────────────────
+/* ── Edge path with bezier curves ── */
+function edgePath(from, to) {
+  const cx1 = from.x + from.w / 2, cy1 = from.y + from.h / 2;
+  const cx2 = to.x + to.w / 2, cy2 = to.y + to.h / 2;
+
+  // Determine which sides to connect
+  let x1, y1, x2, y2;
+
+  if (Math.abs(cy2 - cy1) > Math.abs(cx2 - cx1) * 0.3) {
+    // Primarily vertical — connect bottom→top
+    if (cy2 > cy1) {
+      x1 = cx1; y1 = from.y + from.h;
+      x2 = cx2; y2 = to.y;
+    } else {
+      x1 = cx1; y1 = from.y;
+      x2 = cx2; y2 = to.y + to.h;
+    }
+  } else {
+    // Primarily horizontal — connect right→left
+    if (cx2 > cx1) {
+      x1 = from.x + from.w; y1 = cy1;
+      x2 = to.x; y2 = cy2;
+    } else {
+      x1 = from.x; y1 = cy1;
+      x2 = to.x + to.w; y2 = cy2;
+    }
+  }
+
+  const dx = x2 - x1, dy = y2 - y1;
+  const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+
+  // Curve control points
+  let d;
+  if (Math.abs(dy) > Math.abs(dx) * 0.5) {
+    d = `M${x1},${y1} C${x1},${my} ${x2},${my} ${x2},${y2}`;
+  } else {
+    d = `M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`;
+  }
+
+  return { d, mx, my };
+}
+
+/* ── Truncate long labels ── */
+function truncLabel(text, maxLen) {
+  return text.length > maxLen ? text.slice(0, maxLen - 1) + '…' : text;
+}
+
+/* ── Render ── */
 function render() {
   const svg = document.getElementById('svgCanvas');
   const title = document.getElementById('diagramTitle');
@@ -341,221 +419,161 @@ function render() {
 
   title.textContent = DATA.title || 'Architecture Diagram';
 
-  const rect = svg.getBoundingClientRect();
-  const W = rect.width || 1280;
-  const H = rect.height || 600;
-  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  const { positions, canvasW, canvasH } = layoutNodes(DATA.nodes, DATA.edges, DATA.groups || []);
+  svg.setAttribute('viewBox', `0 0 ${canvasW} ${canvasH}`);
+  svg.style.width = Math.min(canvasW, 1200) + 'px';
+  svg.style.height = (Math.min(canvasW, 1200) / canvasW * canvasH) + 'px';
 
-  const positions = layoutNodes(DATA.nodes, DATA.edges, DATA.groups || [], W, H);
-
-  // ── Draw groups ─────
+  // ── Groups ──
   (DATA.groups || []).forEach(g => {
-    const memberPositions = g.nodeIds.map(id => positions[id]).filter(Boolean);
-    if (memberPositions.length === 0) return;
+    const pts = (g.nodeIds || []).map(id => positions[id]).filter(Boolean);
+    if (!pts.length) return;
+    const pad = 18;
+    const x = Math.min(...pts.map(p => p.x)) - pad;
+    const y = Math.min(...pts.map(p => p.y)) - pad - 16;  // extra space for label
+    const x2 = Math.max(...pts.map(p => p.x + p.w)) + pad;
+    const y2 = Math.max(...pts.map(p => p.y + p.h)) + pad;
 
-    const pad = 30;
-    const minX = Math.min(...memberPositions.map(p => p.x)) - pad;
-    const minY = Math.min(...memberPositions.map(p => p.y)) - pad;
-    const maxX = Math.max(...memberPositions.map(p => p.x + p.w)) + pad;
-    const maxY = Math.max(...memberPositions.map(p => p.y + p.h)) + pad;
-
-    const groupRect = createSVGElement('rect', {
-      class: 'group-rect', x: minX, y: minY,
-      width: maxX - minX, height: maxY - minY
-    });
-    svg.appendChild(groupRect);
-
-    const groupLabel = createSVGElement('text', {
-      class: 'group-label', x: minX + 10, y: minY + 16
-    });
-    groupLabel.textContent = g.label;
-    svg.appendChild(groupLabel);
+    svg.appendChild(svgEl('rect', {
+      class:'group-rect', x, y, width: x2-x, height: y2-y
+    }));
+    const lbl = svgEl('text', { class:'group-label', x: x+10, y: y+13 });
+    lbl.textContent = g.label;
+    svg.appendChild(lbl);
   });
 
-  // ── Draw edges ──────
-  const edgeElements = [];
+  // ── Edges ──
+  const edgeEls = [];
   DATA.edges.forEach(e => {
-    const from = positions[e.from];
-    const to = positions[e.to];
-    if (!from || !to) return;
+    const f = positions[e.from], t = positions[e.to];
+    if (!f || !t) return;
 
-    const x1 = from.x + from.w / 2;
-    const y1 = from.y + from.h / 2;
-    const x2 = to.x + to.w / 2;
-    const y2 = to.y + to.h / 2;
-
-    // Shorten line to not overlap node rect
-    const dx = x2 - x1, dy = y2 - y1;
-    const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-    const ux = dx / dist, uy = dy / dist;
-
-    const startDist = Math.min(from.w, from.h) / 2 + 4;
-    const endDist = Math.min(to.w, to.h) / 2 + 8;
-
-    const sx = x1 + ux * startDist;
-    const sy = y1 + uy * startDist;
-    const ex = x2 - ux * endDist;
-    const ey = y2 - uy * endDist;
-
-    const line = createSVGElement('line', {
-      class: 'edge-line',
-      x1: sx, y1: sy, x2: ex, y2: ey,
-      'data-from': e.from, 'data-to': e.to
+    const { d, mx, my } = edgePath(f, t);
+    const path = svgEl('path', {
+      class:'edge-path', d, fill:'none', 'data-from': e.from, 'data-to': e.to
     });
-    svg.appendChild(line);
-    edgeElements.push({ el: line, from: e.from, to: e.to });
+    svg.appendChild(path);
+    edgeEls.push({ el: path, from: e.from, to: e.to });
 
     if (e.label) {
-      const mx = (sx + ex) / 2;
-      const my = (sy + ey) / 2;
-      const labelEl = createSVGElement('text', {
-        class: 'edge-label', x: mx, y: my - 6,
+      const txtLen = e.label.length * 4.5 + 8;
+      const bg = svgEl('rect', {
+        class:'edge-label-bg',
+        x: mx - txtLen/2, y: my - 7,
+        width: txtLen, height: 13, rx: 3
+      });
+      svg.appendChild(bg);
+      edgeEls.push({ el: bg, from: e.from, to: e.to, isLabel: true });
+
+      const lbl = svgEl('text', {
+        class:'edge-label', x: mx, y: my,
         'data-from': e.from, 'data-to': e.to
       });
-      labelEl.textContent = e.label;
-      svg.appendChild(labelEl);
-      edgeElements.push({ el: labelEl, from: e.from, to: e.to, isLabel: true });
+      lbl.textContent = e.label;
+      svg.appendChild(lbl);
+      edgeEls.push({ el: lbl, from: e.from, to: e.to, isLabel: true });
     }
   });
 
-  // ── Draw nodes ──────
-  const nodeElements = {};
+  // ── Nodes ──
+  const nodeEls = {};
   DATA.nodes.forEach(n => {
     const pos = positions[n.id];
     if (!pos) return;
     const color = TYPE_COLORS[n.type] || '#888';
     const icon = TYPE_ICONS[n.type] || '●';
 
-    const g = createSVGElement('g', {
-      class: 'node-group', 'data-id': n.id,
-      style: `--node-color: ${color}`
+    const g = svgEl('g', {
+      class:'node-group', 'data-id': n.id, style: `--node-color:${color}`
     });
 
-    const r = createSVGElement('rect', {
-      class: 'node-rect',
-      x: pos.x, y: pos.y, width: pos.w, height: pos.h,
-      fill: color + '18', stroke: color
-    });
-    g.appendChild(r);
+    g.appendChild(svgEl('rect', {
+      class:'node-rect', x: pos.x, y: pos.y,
+      width: pos.w, height: pos.h,
+      fill: color + '15', stroke: color
+    }));
 
-    const iconEl = createSVGElement('text', {
-      class: 'node-icon',
-      x: pos.x + 20, y: pos.y + pos.h / 2
+    const iconEl = svgEl('text', {
+      class:'node-icon', x: pos.x + 16, y: pos.y + pos.h / 2
     });
     iconEl.textContent = icon;
     g.appendChild(iconEl);
 
-    const label = createSVGElement('text', {
-      class: 'node-label',
-      x: pos.x + pos.w / 2 + 8, y: pos.y + pos.h / 2
+    const labelEl = svgEl('text', {
+      class:'node-label', x: pos.x + pos.w / 2 + 8, y: pos.y + pos.h / 2
     });
-    label.textContent = n.label;
-    g.appendChild(label);
+    labelEl.textContent = truncLabel(n.label, 22);
+    g.appendChild(labelEl);
 
     svg.appendChild(g);
-    nodeElements[n.id] = { el: g, data: n };
+    nodeEls[n.id] = { el: g, data: n };
   });
 
-  // ── Interactions ────
-  // Build adjacency set
-  const adjacent = {};
-  DATA.nodes.forEach(n => adjacent[n.id] = new Set());
+  // ── Interactions ──
+  const adj = {};
+  DATA.nodes.forEach(n => adj[n.id] = new Set());
   DATA.edges.forEach(e => {
-    if (adjacent[e.from]) adjacent[e.from].add(e.to);
-    if (adjacent[e.to]) adjacent[e.to].add(e.from);
+    if (adj[e.from]) adj[e.from].add(e.to);
+    if (adj[e.to]) adj[e.to].add(e.from);
   });
 
-  function highlightNode(nodeId) {
-    const neighbors = adjacent[nodeId] || new Set();
-
-    // Dim all, then highlight connected
-    Object.keys(nodeElements).forEach(id => {
-      const ne = nodeElements[id].el;
-      if (id === nodeId || neighbors.has(id)) {
-        ne.classList.add('highlighted');
-        ne.classList.remove('dimmed');
+  function highlight(nodeId) {
+    const nbrs = adj[nodeId] || new Set();
+    Object.keys(nodeEls).forEach(id => {
+      const el = nodeEls[id].el;
+      if (id === nodeId || nbrs.has(id)) {
+        el.classList.add('highlighted'); el.classList.remove('dimmed');
       } else {
-        ne.classList.remove('highlighted');
-        ne.classList.add('dimmed');
+        el.classList.remove('highlighted'); el.classList.add('dimmed');
       }
     });
-
-    edgeElements.forEach(ee => {
+    edgeEls.forEach(ee => {
       if (ee.from === nodeId || ee.to === nodeId) {
-        ee.el.classList.add('highlighted');
-        ee.el.classList.remove('dimmed');
-        if (!ee.isLabel) ee.el.setAttribute('marker-end', 'url(#arrowhead-hl)');
+        ee.el.classList.add('highlighted'); ee.el.classList.remove('dimmed');
       } else {
-        ee.el.classList.remove('highlighted');
-        ee.el.classList.add('dimmed');
+        ee.el.classList.remove('highlighted'); ee.el.classList.add('dimmed');
       }
     });
   }
 
-  function clearHighlight() {
-    Object.keys(nodeElements).forEach(id => {
-      nodeElements[id].el.classList.remove('highlighted', 'dimmed');
-    });
-    edgeElements.forEach(ee => {
-      ee.el.classList.remove('highlighted', 'dimmed');
-      if (!ee.isLabel) ee.el.setAttribute('marker-end', 'url(#arrowhead)');
-    });
+  function clearHL() {
+    Object.values(nodeEls).forEach(ne => ne.el.classList.remove('highlighted','dimmed'));
+    edgeEls.forEach(ee => ee.el.classList.remove('highlighted','dimmed'));
   }
 
-  // Hover
-  Object.keys(nodeElements).forEach(id => {
-    const g = nodeElements[id].el;
-    g.addEventListener('mouseenter', () => highlightNode(id));
-    g.addEventListener('mouseleave', () => clearHighlight());
-  });
-
-  // Click → tooltip
-  let activeTooltip = null;
-
-  Object.keys(nodeElements).forEach(id => {
-    const g = nodeElements[id].el;
-    const n = nodeElements[id].data;
-
-    g.addEventListener('click', (evt) => {
+  Object.keys(nodeEls).forEach(id => {
+    const g = nodeEls[id].el;
+    g.addEventListener('mouseenter', () => highlight(id));
+    g.addEventListener('mouseleave', () => clearHL());
+    g.addEventListener('click', evt => {
       evt.stopPropagation();
-      const color = TYPE_COLORS[n.type] || '#888';
-
+      const n = nodeEls[id].data;
+      const c = TYPE_COLORS[n.type] || '#888';
       document.getElementById('tooltipTitle').textContent = n.label;
-      const typeEl = document.getElementById('tooltipType');
-      typeEl.textContent = n.type;
-      typeEl.style.background = color + '30';
-      typeEl.style.color = color;
-      document.getElementById('tooltipDesc').textContent = n.description || 'No description.';
-
-      tooltip.style.left = Math.min(evt.clientX + 12, window.innerWidth - 320) + 'px';
-      tooltip.style.top = Math.min(evt.clientY + 12, window.innerHeight - 150) + 'px';
+      const te = document.getElementById('tooltipType');
+      te.textContent = n.type; te.style.background = c+'30'; te.style.color = c;
+      document.getElementById('tooltipDesc').textContent = n.description || '';
+      tooltip.style.left = Math.min(evt.clientX+12, window.innerWidth-300)+'px';
+      tooltip.style.top = Math.min(evt.clientY+12, window.innerHeight-140)+'px';
       tooltip.classList.add('visible');
-      activeTooltip = id;
     });
   });
 
-  document.addEventListener('click', () => {
-    tooltip.classList.remove('visible');
-    activeTooltip = null;
-  });
+  document.addEventListener('click', () => tooltip.classList.remove('visible'));
 
-  // ── Legend ──────────
-  const usedTypes = new Set(DATA.nodes.map(n => n.type));
+  // ── Legend ──
+  const usedTypes = [...new Set(DATA.nodes.map(n => n.type))];
   usedTypes.forEach(type => {
-    const color = TYPE_COLORS[type] || '#888';
+    const c = TYPE_COLORS[type] || '#888';
     const item = document.createElement('div');
     item.className = 'legend-item';
-    item.innerHTML = `<span class="legend-dot" style="background:${color}"></span>${type}`;
+    item.innerHTML = `<span class="legend-dot" style="background:${c}"></span>${type}`;
     legend.appendChild(item);
   });
 }
 
-// Init
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', render);
-} else {
-  render();
-}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', render);
+else render();
 </script>
 </body>
 </html>
