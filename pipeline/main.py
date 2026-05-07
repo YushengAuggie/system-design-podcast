@@ -19,13 +19,14 @@ from pipeline.steps.script import run_script
 from pipeline.steps.voices import run_voices
 from pipeline.steps.website import run_website
 from pipeline.steps.youtube import run_youtube
+from pipeline.steps.final_review import run_final_review
 from pipeline.utils import episode_dir, load_json, load_text, save_json, save_text
 
 # Ordered pipeline steps
 STEPS = [
     "research", "script", "review", "voices", "audio",
     "diagram", "diagram_review", "screenshot",
-    "youtube", "podcast", "website",
+    "youtube", "podcast", "website", "final_review",
 ]
 
 
@@ -351,6 +352,35 @@ def run_pipeline(
             # Non-fatal: pipeline still completes
         else:
             print(f"  Website updated: {website_result.output}/")
+
+    # --- Step: Final Review ---
+    if "final_review" in steps_to_run:
+        _print_step("Final Review", "running")
+        final_result = run_final_review(
+            ep_dir=ep_dir,
+            topic=topic,
+            season=season,
+            episode=episode,
+            dry_run=dry_run,
+        )
+        _print_step(
+            "Final Review",
+            "passed" if final_result.passed else "failed",
+            final_result.message,
+        )
+        save_json(ep_dir / "final_review.json", final_result.output)
+
+        if final_result.output.get("fixes_applied"):
+            for fix in final_result.output["fixes_applied"]:
+                print(f"    ✅ {fix}")
+
+        if final_result.output.get("issues"):
+            for issue in final_result.output["issues"]:
+                icon = "❌" if issue["severity"] == "error" else "⚠️"
+                print(f"    {icon} {issue['message']}")
+
+        if not final_result.passed:
+            print(f"\n⚠️  Final review found issues — see above for details")
 
     print("\nPipeline complete!")
     print(f"Outputs saved to: {ep_dir}/")

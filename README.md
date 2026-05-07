@@ -130,7 +130,8 @@ system-design-podcast/
 │       ├── screenshot.py      # Step 6c: Diagram screenshot (Playwright)
 │       ├── youtube.py         # Step 7: YouTube upload
 │       ├── podcast.py         # Step 8: Podcast RSS feed
-│       └── website.py         # Step 9: Static website generation
+│       ├── website.py         # Step 9: Static website generation
+│       └── final_review.py    # Step 10: Final QA review + auto-fix
 ├── episodes/
 │   └── 01-url-shortener/
 │       ├── research.json      # Research data
@@ -139,7 +140,8 @@ system-design-podcast/
 │       ├── diagram.json       # Structured diagram data
 │       ├── diagram.html       # Interactive architecture diagram
 │       ├── diagram.png        # Screenshot for thumbnails
-│       └── diagram.mmd        # Mermaid fallback
+│       ├── diagram.mmd        # Mermaid fallback
+│       └── final_review.json  # QA review results
 ├── docs/                      # Generated static website
 └── pyproject.toml
 ```
