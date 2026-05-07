@@ -187,6 +187,35 @@ def _render_references_html(research: dict) -> str:
 # ── Episode Page ──────────────────────────────────────────────────────────────
 
 
+def _get_audio_url(ep_dir: Path, season: int, episode: int) -> str:
+    """Get the audio URL — prefer GitHub Release, fall back to local."""
+    from pipeline.config import PODCAST_GITHUB_REPO
+    release_tag = f"ep-{season}-{episode}"
+    release_url = f"https://github.com/{PODCAST_GITHUB_REPO}/releases/download/{release_tag}/episode.mp3"
+    # Always prefer the release URL since mp3 is in .gitignore
+    return release_url
+
+
+def _build_listen_links(ep_dir: Path) -> str:
+    """Build listen-on links from available data."""
+    links = []
+    youtube_path = ep_dir / "youtube.json"
+    if youtube_path.exists():
+        try:
+            yt_data = json.loads(youtube_path.read_text())
+            video_id = yt_data.get("video_id", "")
+            if video_id:
+                url = f"https://www.youtube.com/watch?v={video_id}"
+                links.append(
+                    f'<a href="{url}" class="listen-btn" target="_blank" rel="noopener">▶ YouTube</a>'
+                )
+        except Exception:
+            pass
+    if not links:
+        return '<span style="font-size:0.8rem; color:var(--text-light);">More platforms coming soon</span>'
+    return '\n          '.join(links)
+
+
 def _render_episode_page(info: dict, website_dir: Path, template: str) -> Path:
     """Render a single episode HTML page and return its output path."""
     ep_dir: Path = info["dir"]
@@ -196,17 +225,18 @@ def _render_episode_page(info: dict, website_dir: Path, template: str) -> Path:
     ep_out_dir = website_dir / slug
     ep_out_dir.mkdir(parents=True, exist_ok=True)
 
-    # Copy audio if present
-    audio_src = ep_dir / "episode.mp3"
-    if audio_src.exists():
-        shutil.copy2(audio_src, ep_out_dir / "episode.mp3")
-
     # Build substitution values
     season = info["season"]
     episode = info["episode"]
     topic = info["topic"]
     research = info["research"]
     summary = research.get("summary", f"A 10-minute deep dive into {topic}.")
+
+    # Audio: use GitHub Release URL (mp3 is in .gitignore)
+    audio_url = _get_audio_url(ep_dir, season, episode)
+
+    # YouTube link if available
+    listen_links = _build_listen_links(ep_dir)
 
     diagram_html = _render_diagram_html(ep_dir, ep_out_dir)
     transcript_html = _render_transcript_html(ep_dir)
@@ -218,6 +248,8 @@ def _render_episode_page(info: dict, website_dir: Path, template: str) -> Path:
     page = page.replace("{{EPISODE_SLUG}}", slug)
     page = page.replace("{{SEASON}}", str(season))
     page = page.replace("{{EPISODE}}", str(episode))
+    page = page.replace("{{AUDIO_URL}}", audio_url)
+    page = page.replace("{{LISTEN_LINKS}}", listen_links)
     page = page.replace("{{DIAGRAM_CONTENT}}", diagram_html)
     page = page.replace("{{TRANSCRIPT_CONTENT}}", transcript_html)
     page = page.replace("{{REFERENCES_CONTENT}}", references_html)
@@ -240,7 +272,7 @@ def _render_episode_card(info: dict, website_dir: Path) -> str:
     summary = html.escape(research.get("summary", f"A deep dive into {info['topic']}."))
 
     ep_out_dir = website_dir / slug
-    has_audio = (ep_out_dir / "episode.mp3").exists()
+    ep_dir = info["dir"]
     has_diagram_png = (ep_out_dir / "diagram.png").exists()
     has_diagram_svg = (ep_out_dir / "diagram.svg").exists()
 
@@ -251,11 +283,10 @@ def _render_episode_card(info: dict, website_dir: Path) -> str:
     else:
         thumbnail = '<div class="card-diagram-placeholder">🏗️<span>Diagram</span></div>'
 
-    audio_html = ""
-    if has_audio:
-        audio_html = (
-            '<div class="card-audio">'
-            f'<audio controls preload="none"><source src="{slug}/episode.mp3" type="audio/mpeg" /></audio>'
+    card_audio_url = _get_audio_url(ep_dir, season, episode_num)
+    audio_html = (
+        '<div class="card-audio">'
+        f'<audio controls preload="none"><source src="{card_audio_url}" type="audio/mpeg" /></audio>'
             "</div>"
         )
 

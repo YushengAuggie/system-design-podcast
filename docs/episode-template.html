@@ -50,14 +50,11 @@
       <section id="player" class="episode-player">
         <h2>🎧 Listen</h2>
         <audio controls preload="metadata">
-          <source src="episode.mp3" type="audio/mpeg" />
+          <source src="{{AUDIO_URL}}" type="audio/mpeg" />
           Your browser does not support the audio element.
         </audio>
         <div class="listen-on">
-          <span style="font-size:0.8rem; color:var(--text-light); align-self:center;">Also on:</span>
-          <a href="#" class="listen-btn" aria-label="Spotify (coming soon)">🎧 Spotify</a>
-          <a href="#" class="listen-btn" aria-label="YouTube (coming soon)">▶ YouTube</a>
-          <a href="#" class="listen-btn" aria-label="Apple Podcasts (coming soon)">🎵 Apple Podcasts</a>
+          {{LISTEN_LINKS}}
         </div>
       </section>
 
