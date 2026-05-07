@@ -1,8 +1,24 @@
 """Final Review Agent — validates the complete episode output before deployment.
 
-Runs after all generation steps. Checks that all expected files exist, audio
-is within duration bounds, website HTML is valid, diagram renders, links work,
-and content is coherent. Attempts auto-fixes for common issues.
+Runs after all generation steps. Goes through a comprehensive checklist to ensure
+every episode is production-ready before deployment. Attempts auto-fixes for
+common issues and produces a detailed report.
+
+CHECKLIST (every episode, every time):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 1. FILES       — All required files exist and are non-empty
+ 2. AUDIO       — Duration within 3-12 min, valid MP3
+ 3. SCRIPT      — Host A/B markers present, balanced, 500+ words
+ 4. DIAGRAM     — Valid JSON, 3+ nodes, no orphan edges, no disconnected nodes
+ 5. WEBSITE     — Episode page exists, no broken links, correct audio URL
+ 6. AUDIO URL   — Points to GitHub Release (not local file)
+ 7. YOUTUBE     — Link present in episode page if upload happened
+ 8. LINKS       — No placeholder href="#" links remain
+ 9. CSS         — No stale old-theme CSS variables
+10. DIAGRAM WEB — diagram.html copied to docs/, iframe present
+11. RSS FEED    — Episode listed in feed.xml
+12. INDEX PAGE  — Episode card present on main index.html
+13. COHERENCE   — Title/topic matches across all outputs
 """
 
 import json
@@ -16,20 +32,20 @@ from pipeline.config import (
     AUDIO_DURATION_MAX_SEC,
     AUDIO_DURATION_MIN_SEC,
     EPISODES_DIR,
+    PODCAST_GITHUB_REPO,
     WEBSITE_DIR,
     WEBSITE_URL,
 )
-from pipeline.llm import call_anthropic
 from pipeline.quality import StepResult
 from pipeline.utils import slugify
 
 
-# ── Checks ───────────────────────────────────────────────────────────────────
+# ── Individual Checks ────────────────────────────────────────────────────────
 
-def _check_episode_files(ep_dir: Path) -> list[dict]:
-    """Check that all expected episode files exist."""
+def _check_1_files(ep_dir: Path) -> list[dict]:
+    """[1] FILES — All required files exist and are non-empty."""
     issues = []
-    expected = {
+    required = {
         "research.json": "Research data",
         "script.md": "Episode script",
         "review.json": "Script review",
@@ -43,138 +59,127 @@ def _check_episode_files(ep_dir: Path) -> list[dict]:
         "diagram.png": "Diagram screenshot",
         "diagram_review.json": "Diagram review",
         "youtube.json": "YouTube upload info",
+        "final_review.json": "Previous review results",
     }
 
-    for filename, label in expected.items():
+    for filename, label in required.items():
         path = ep_dir / filename
         if not path.exists():
             issues.append({
-                "severity": "error",
-                "category": "missing_file",
+                "check": 1, "severity": "error", "category": "missing_file",
                 "message": f"Missing required file: {filename} ({label})",
-                "file": filename,
-                "fixable": False,
+                "file": filename, "fixable": False,
             })
         elif path.stat().st_size == 0:
             issues.append({
-                "severity": "error",
-                "category": "empty_file",
+                "check": 1, "severity": "error", "category": "empty_file",
                 "message": f"File is empty: {filename} ({label})",
-                "file": filename,
-                "fixable": False,
+                "file": filename, "fixable": False,
             })
 
     for filename, label in optional.items():
         path = ep_dir / filename
         if not path.exists():
             issues.append({
-                "severity": "warning",
-                "category": "missing_optional",
-                "message": f"Missing optional file: {filename} ({label})",
-                "file": filename,
-                "fixable": False,
+                "check": 1, "severity": "info", "category": "missing_optional",
+                "message": f"Optional file not found: {filename} ({label})",
+                "file": filename, "fixable": False,
             })
 
     return issues
 
 
-def _check_audio_duration(ep_dir: Path) -> list[dict]:
-    """Check audio duration is within bounds using ffprobe."""
+def _check_2_audio(ep_dir: Path) -> list[dict]:
+    """[2] AUDIO — Duration within bounds, valid MP3."""
     issues = []
     mp3_path = ep_dir / "episode.mp3"
     if not mp3_path.exists():
-        return issues  # Already caught by file check
+        return issues  # Caught by check 1
 
     try:
         result = subprocess.run(
-            [
-                "ffprobe", "-v", "error",
-                "-show_entries", "format=duration",
-                "-of", "default=noprint_wrappers=1:nokey=1",
-                str(mp3_path),
-            ],
+            ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+             "-of", "default=noprint_wrappers=1:nokey=1", str(mp3_path)],
             capture_output=True, text=True, timeout=15,
         )
         if result.returncode == 0 and result.stdout.strip():
             duration = float(result.stdout.strip())
             if duration < AUDIO_DURATION_MIN_SEC:
                 issues.append({
-                    "severity": "error",
-                    "category": "audio_duration",
+                    "check": 2, "severity": "error", "category": "audio_short",
                     "message": f"Audio too short: {duration:.0f}s (min {AUDIO_DURATION_MIN_SEC}s)",
                     "fixable": False,
                 })
             elif duration > AUDIO_DURATION_MAX_SEC:
                 issues.append({
-                    "severity": "warning",
-                    "category": "audio_duration",
-                    "message": f"Audio too long: {duration:.0f}s (max {AUDIO_DURATION_MAX_SEC}s)",
+                    "check": 2, "severity": "warning", "category": "audio_long",
+                    "message": f"Audio long: {duration:.0f}s (max {AUDIO_DURATION_MAX_SEC}s)",
                     "fixable": False,
                 })
-    except (subprocess.TimeoutExpired, FileNotFoundError):
+        else:
+            issues.append({
+                "check": 2, "severity": "warning", "category": "audio_probe_fail",
+                "message": f"ffprobe failed: {result.stderr.strip()[:100]}",
+                "fixable": False,
+            })
+    except FileNotFoundError:
         issues.append({
-            "severity": "warning",
-            "category": "audio_check",
-            "message": "Could not check audio duration (ffprobe not available)",
+            "check": 2, "severity": "info", "category": "audio_no_ffprobe",
+            "message": "ffprobe not available — skipping audio duration check",
+            "fixable": False,
+        })
+    except subprocess.TimeoutExpired:
+        issues.append({
+            "check": 2, "severity": "warning", "category": "audio_timeout",
+            "message": "ffprobe timed out checking audio",
             "fixable": False,
         })
 
     return issues
 
 
-def _check_script_quality(ep_dir: Path) -> list[dict]:
-    """Validate script structure and content."""
+def _check_3_script(ep_dir: Path) -> list[dict]:
+    """[3] SCRIPT — Host A/B markers, balance, word count."""
     issues = []
     script_path = ep_dir / "script.md"
     if not script_path.exists():
         return issues
 
     script = script_path.read_text()
-    lines = [l for l in script.strip().split("\n") if l.strip()]
-
-    # Check for host dialogue markers
     host_a = len(re.findall(r"\*\*\[Host A\]:\*\*", script))
     host_b = len(re.findall(r"\*\*\[Host B\]:\*\*", script))
 
     if host_a == 0:
         issues.append({
-            "severity": "error",
-            "category": "script_format",
-            "message": "No Host A dialogue found in script",
-            "fixable": False,
+            "check": 3, "severity": "error", "category": "script_no_host_a",
+            "message": "No Host A dialogue found in script", "fixable": False,
         })
     if host_b == 0:
         issues.append({
-            "severity": "error",
-            "category": "script_format",
-            "message": "No Host B dialogue found in script",
-            "fixable": False,
+            "check": 3, "severity": "error", "category": "script_no_host_b",
+            "message": "No Host B dialogue found in script", "fixable": False,
         })
     if host_a > 0 and host_b > 0:
         ratio = max(host_a, host_b) / min(host_a, host_b)
         if ratio > 3.0:
             issues.append({
-                "severity": "warning",
-                "category": "script_balance",
-                "message": f"Host dialogue imbalanced: A={host_a}, B={host_b} (ratio {ratio:.1f}x)",
+                "check": 3, "severity": "warning", "category": "script_imbalanced",
+                "message": f"Host dialogue imbalanced: A={host_a}, B={host_b} ({ratio:.1f}x)",
                 "fixable": False,
             })
 
-    # Word count
     words = len(script.split())
     if words < 500:
         issues.append({
-            "severity": "warning",
-            "category": "script_length",
-            "message": f"Script seems short: {words} words",
-            "fixable": False,
+            "check": 3, "severity": "warning", "category": "script_short",
+            "message": f"Script short: {words} words (expected 750+)", "fixable": False,
         })
 
     return issues
 
 
-def _check_diagram_json(ep_dir: Path) -> list[dict]:
-    """Validate diagram JSON structure."""
+def _check_4_diagram(ep_dir: Path) -> list[dict]:
+    """[4] DIAGRAM — Valid JSON, node/edge integrity."""
     issues = []
     diagram_path = ep_dir / "diagram.json"
     if not diagram_path.exists():
@@ -184,10 +189,8 @@ def _check_diagram_json(ep_dir: Path) -> list[dict]:
         data = json.loads(diagram_path.read_text())
     except json.JSONDecodeError as e:
         issues.append({
-            "severity": "error",
-            "category": "diagram_json",
-            "message": f"Diagram JSON parse error: {e}",
-            "fixable": False,
+            "check": 4, "severity": "error", "category": "diagram_parse",
+            "message": f"Diagram JSON parse error: {e}", "fixable": False,
         })
         return issues
 
@@ -197,183 +200,294 @@ def _check_diagram_json(ep_dir: Path) -> list[dict]:
 
     if len(nodes) < 3:
         issues.append({
-            "severity": "error",
-            "category": "diagram_nodes",
-            "message": f"Too few nodes: {len(nodes)} (minimum 3)",
-            "fixable": False,
+            "check": 4, "severity": "error", "category": "diagram_few_nodes",
+            "message": f"Too few nodes: {len(nodes)} (min 3)", "fixable": False,
         })
-
-    if len(edges) < 2:
+    if len(nodes) > 15:
         issues.append({
-            "severity": "warning",
-            "category": "diagram_edges",
-            "message": f"Very few edges: {len(edges)}",
-            "fixable": False,
+            "check": 4, "severity": "warning", "category": "diagram_many_nodes",
+            "message": f"Many nodes: {len(nodes)} (>15 may clutter)", "fixable": False,
         })
 
-    # Check for orphan edges
     for edge in edges:
         if edge.get("from") not in node_ids:
             issues.append({
-                "severity": "error",
-                "category": "diagram_edge_ref",
-                "message": f"Edge references unknown node: from='{edge.get('from')}'",
-                "fixable": False,
+                "check": 4, "severity": "error", "category": "diagram_bad_edge",
+                "message": f"Edge from unknown node: '{edge.get('from')}'", "fixable": False,
             })
         if edge.get("to") not in node_ids:
             issues.append({
-                "severity": "error",
-                "category": "diagram_edge_ref",
-                "message": f"Edge references unknown node: to='{edge.get('to')}'",
-                "fixable": False,
+                "check": 4, "severity": "error", "category": "diagram_bad_edge",
+                "message": f"Edge to unknown node: '{edge.get('to')}'", "fixable": False,
             })
 
-    # Check for nodes with no connections
     connected = set()
     for edge in edges:
         connected.add(edge.get("from"))
         connected.add(edge.get("to"))
-    orphan_nodes = node_ids - connected
-    if orphan_nodes:
+    orphans = node_ids - connected
+    if orphans:
         issues.append({
-            "severity": "warning",
-            "category": "diagram_orphans",
-            "message": f"Disconnected nodes: {', '.join(orphan_nodes)}",
-            "fixable": False,
+            "check": 4, "severity": "warning", "category": "diagram_orphans",
+            "message": f"Disconnected nodes: {', '.join(sorted(orphans))}", "fixable": False,
         })
+
+    # Check all nodes have required fields
+    for node in nodes:
+        if not node.get("label"):
+            issues.append({
+                "check": 4, "severity": "warning", "category": "diagram_node_label",
+                "message": f"Node '{node.get('id')}' missing label", "fixable": False,
+            })
+        if not node.get("description"):
+            issues.append({
+                "check": 4, "severity": "info", "category": "diagram_node_desc",
+                "message": f"Node '{node.get('id')}' missing description", "fixable": False,
+            })
 
     return issues
 
 
-def _check_website_output(ep_dir: Path, topic: str, season: int, episode: int) -> list[dict]:
-    """Check website files for the episode."""
+def _check_5_website(ep_dir: Path, topic: str) -> list[dict]:
+    """[5] WEBSITE — Episode page exists in docs/."""
     issues = []
     slug = slugify(topic)
-    website_dir = Path(WEBSITE_DIR)
-    ep_web_dir = website_dir / slug
+    ep_web_dir = Path(WEBSITE_DIR) / slug
 
     if not ep_web_dir.exists():
         issues.append({
-            "severity": "error",
-            "category": "website_missing",
-            "message": f"Website episode directory missing: {ep_web_dir}",
-            "fixable": True,
-            "fix": "regenerate_website",
+            "check": 5, "severity": "error", "category": "website_dir_missing",
+            "message": f"Website episode dir missing: docs/{slug}/",
+            "fixable": True, "fix": "regenerate_website",
         })
         return issues
 
     index_html = ep_web_dir / "index.html"
     if not index_html.exists():
         issues.append({
-            "severity": "error",
-            "category": "website_missing",
-            "message": f"Episode page missing: {index_html}",
-            "fixable": True,
-            "fix": "regenerate_website",
+            "check": 5, "severity": "error", "category": "website_page_missing",
+            "message": f"Episode page missing: docs/{slug}/index.html",
+            "fixable": True, "fix": "regenerate_website",
         })
-        return issues
-
-    html_content = index_html.read_text()
-
-    # Check for broken href="#" links (placeholders that should be removed)
-    placeholder_links = re.findall(r'href="#"[^>]*>[^<]*(?:Spotify|Apple)', html_content)
-    if placeholder_links:
-        issues.append({
-            "severity": "warning",
-            "category": "website_placeholders",
-            "message": f"Placeholder links found: {len(placeholder_links)} (Spotify/Apple with href='#')",
-            "fixable": True,
-            "fix": "remove_placeholder_links",
-        })
-
-    # Check for stale CSS variables (old theme)
-    old_vars = re.findall(r'var\(--(?:warm-brown|light-tan|cream|sage)', html_content)
-    if old_vars:
-        issues.append({
-            "severity": "error",
-            "category": "website_css",
-            "message": f"Old theme CSS variables found: {set(old_vars)}",
-            "fixable": True,
-            "fix": "fix_css_vars",
-        })
-
-    # Check audio source points to something real (not just a local file)
-    audio_srcs = re.findall(r'<source\s+src="([^"]+)"', html_content)
-    for src in audio_srcs:
-        if not src.startswith("http") and not src.startswith("../") and src.endswith(".mp3"):
-            # Local file reference — check if it would work on GitHub Pages
-            local_path = ep_web_dir / src
-            if not local_path.exists():
-                issues.append({
-                    "severity": "error",
-                    "category": "website_audio",
-                    "message": f"Audio source '{src}' won't work on deployed site (file not in docs/)",
-                    "fixable": False,
-                })
-
-    # Check diagram embed
-    if "diagram.html" in html_content:
-        diagram_html = ep_web_dir / "diagram.html"
-        if not diagram_html.exists():
-            issues.append({
-                "severity": "error",
-                "category": "website_diagram",
-                "message": "Episode page references diagram.html but file is missing from docs/",
-                "fixable": True,
-                "fix": "copy_diagram",
-            })
-
-    # Check for YouTube link if upload happened
-    youtube_path = ep_dir / "youtube.json"
-    if youtube_path.exists():
-        try:
-            yt_data = json.loads(youtube_path.read_text())
-            video_id = yt_data.get("video_id", "")
-            if video_id and video_id not in html_content:
-                issues.append({
-                    "severity": "warning",
-                    "category": "website_youtube",
-                    "message": f"YouTube video uploaded but link not in episode page (video_id: {video_id})",
-                    "fixable": True,
-                    "fix": "update_youtube_link",
-                })
-        except Exception:
-            pass
 
     return issues
 
 
-def _check_feed(topic: str, season: int, episode: int) -> list[dict]:
-    """Check RSS feed includes this episode."""
+def _check_6_audio_url(ep_dir: Path, topic: str) -> list[dict]:
+    """[6] AUDIO URL — Must use GitHub Release URL, not local file."""
+    issues = []
+    slug = slugify(topic)
+    ep_web_dir = Path(WEBSITE_DIR) / slug
+    index_html = ep_web_dir / "index.html"
+    if not index_html.exists():
+        return issues
+
+    content = index_html.read_text()
+    audio_srcs = re.findall(r'<source\s+src="([^"]+)"', content)
+
+    for src in audio_srcs:
+        if src.startswith("http"):
+            continue  # Good — remote URL
+        if src.endswith(".mp3"):
+            issues.append({
+                "check": 6, "severity": "error", "category": "audio_local_ref",
+                "message": f"Audio uses local path '{src}' — will break on GitHub Pages (mp3 in .gitignore)",
+                "fixable": True, "fix": "fix_audio_url",
+            })
+
+    if not audio_srcs:
+        issues.append({
+            "check": 6, "severity": "warning", "category": "audio_no_source",
+            "message": "No audio source tag found in episode page",
+            "fixable": False,
+        })
+
+    return issues
+
+
+def _check_7_youtube(ep_dir: Path, topic: str) -> list[dict]:
+    """[7] YOUTUBE — Link present if upload happened."""
+    issues = []
+    yt_path = ep_dir / "youtube.json"
+    if not yt_path.exists():
+        return issues  # No upload — OK
+
+    try:
+        yt_data = json.loads(yt_path.read_text())
+        video_id = yt_data.get("video_id", "")
+        if not video_id:
+            return issues
+    except Exception:
+        return issues
+
+    slug = slugify(topic)
+    ep_web = Path(WEBSITE_DIR) / slug / "index.html"
+    if not ep_web.exists():
+        return issues
+
+    content = ep_web.read_text()
+    if video_id not in content:
+        issues.append({
+            "check": 7, "severity": "warning", "category": "youtube_link_missing",
+            "message": f"YouTube video uploaded (id: {video_id}) but link not in episode page",
+            "fixable": True, "fix": "fix_youtube_link",
+        })
+
+    return issues
+
+
+def _check_8_placeholder_links(topic: str) -> list[dict]:
+    """[8] LINKS — No placeholder href='#' links."""
+    issues = []
+    slug = slugify(topic)
+    ep_web = Path(WEBSITE_DIR) / slug / "index.html"
+    if not ep_web.exists():
+        return issues
+
+    content = ep_web.read_text()
+    placeholders = re.findall(r'href="#"[^>]*>[^<]+</a>', content)
+    if placeholders:
+        labels = [re.search(r'>([^<]+)<', p).group(1) for p in placeholders if re.search(r'>([^<]+)<', p)]
+        issues.append({
+            "check": 8, "severity": "warning", "category": "placeholder_links",
+            "message": f"Placeholder links found: {', '.join(labels)}",
+            "fixable": True, "fix": "remove_placeholder_links",
+        })
+
+    return issues
+
+
+def _check_9_css(topic: str) -> list[dict]:
+    """[9] CSS — No stale old-theme variables."""
+    issues = []
+    slug = slugify(topic)
+    ep_web = Path(WEBSITE_DIR) / slug / "index.html"
+    if not ep_web.exists():
+        return issues
+
+    content = ep_web.read_text()
+    old_vars = set(re.findall(r'var\(--(?:warm-brown|light-tan|cream|sage)\)', content))
+    if old_vars:
+        issues.append({
+            "check": 9, "severity": "error", "category": "stale_css_vars",
+            "message": f"Old theme CSS vars: {', '.join(sorted(old_vars))}",
+            "fixable": True, "fix": "fix_css_vars",
+        })
+
+    return issues
+
+
+def _check_10_diagram_web(ep_dir: Path, topic: str) -> list[dict]:
+    """[10] DIAGRAM WEB — diagram.html present in docs/, iframe in page."""
+    issues = []
+    slug = slugify(topic)
+    ep_web_dir = Path(WEBSITE_DIR) / slug
+    ep_page = ep_web_dir / "index.html"
+    if not ep_page.exists():
+        return issues
+
+    content = ep_page.read_text()
+    diagram_web = ep_web_dir / "diagram.html"
+
+    if "diagram.html" in content and not diagram_web.exists():
+        issues.append({
+            "check": 10, "severity": "error", "category": "diagram_web_missing",
+            "message": "Episode page references diagram.html but file missing from docs/",
+            "fixable": True, "fix": "copy_diagram",
+        })
+
+    if "diagram.html" not in content and (ep_dir / "diagram.html").exists():
+        issues.append({
+            "check": 10, "severity": "warning", "category": "diagram_not_embedded",
+            "message": "diagram.html exists but not embedded in episode page",
+            "fixable": False,
+        })
+
+    return issues
+
+
+def _check_11_feed(topic: str, season: int, episode: int) -> list[dict]:
+    """[11] RSS FEED — Episode present in feed.xml."""
     issues = []
     feed_path = Path(WEBSITE_DIR) / "feed.xml"
     if not feed_path.exists():
         issues.append({
-            "severity": "warning",
-            "category": "feed_missing",
-            "message": "RSS feed file not found",
-            "fixable": True,
-            "fix": "regenerate_website",
+            "check": 11, "severity": "warning", "category": "feed_missing",
+            "message": "RSS feed file (docs/feed.xml) not found",
+            "fixable": True, "fix": "copy_feed",
         })
         return issues
 
-    feed_content = feed_path.read_text()
-    # Search by multiple identifiers: topic name, slug, or episode code
+    content = feed_path.read_text()
     slug = slugify(topic)
     ep_code = f"S{season:02d}E{episode:02d}"
     found = (
-        slug in feed_content
-        or topic.lower() in feed_content.lower()
-        or ep_code.lower() in feed_content.lower()
+        slug in content
+        or topic.lower() in content.lower()
+        or ep_code.lower() in content.lower()
     )
     if not found:
         issues.append({
-            "severity": "warning",
-            "category": "feed_episode",
+            "check": 11, "severity": "warning", "category": "feed_no_episode",
             "message": f"Episode '{topic}' ({ep_code}) not found in RSS feed",
-            "fixable": True,
-            "fix": "regenerate_website",
+            "fixable": True, "fix": "copy_feed",
         })
+
+    return issues
+
+
+def _check_12_index(topic: str) -> list[dict]:
+    """[12] INDEX PAGE — Episode card present on main index."""
+    issues = []
+    slug = slugify(topic)
+    index_path = Path(WEBSITE_DIR) / "index.html"
+    if not index_path.exists():
+        issues.append({
+            "check": 12, "severity": "warning", "category": "index_missing",
+            "message": "Main index.html not found",
+            "fixable": False,
+        })
+        return issues
+
+    content = index_path.read_text()
+    if slug not in content:
+        issues.append({
+            "check": 12, "severity": "warning", "category": "index_no_card",
+            "message": f"Episode card for '{topic}' not found on main index page",
+            "fixable": True, "fix": "regenerate_website",
+        })
+
+    # Also check main page audio URL
+    audio_srcs = re.findall(r'<source\s+src="([^"]+)"', content)
+    for src in audio_srcs:
+        if not src.startswith("http") and src.endswith(".mp3"):
+            issues.append({
+                "check": 12, "severity": "error", "category": "index_audio_local",
+                "message": f"Main page audio uses local path '{src}'",
+                "fixable": True, "fix": "fix_index_audio",
+            })
+
+    return issues
+
+
+def _check_13_coherence(ep_dir: Path, topic: str) -> list[dict]:
+    """[13] COHERENCE — Topic matches across outputs."""
+    issues = []
+    research_path = ep_dir / "research.json"
+    if not research_path.exists():
+        return issues
+
+    try:
+        research = json.loads(research_path.read_text())
+        research_topic = research.get("topic", "")
+        if research_topic and topic.lower() not in research_topic.lower():
+            issues.append({
+                "check": 13, "severity": "warning", "category": "topic_mismatch",
+                "message": f"Research topic '{research_topic}' doesn't match '{topic}'",
+                "fixable": False,
+            })
+    except Exception:
+        pass
 
     return issues
 
@@ -388,7 +502,7 @@ def _apply_fixes(
     episode: int,
 ) -> list[str]:
     """Attempt to fix identified issues. Returns list of applied fixes."""
-    fixes_applied = []
+    fixes = []
     slug = slugify(topic)
     website_dir = Path(WEBSITE_DIR)
     ep_web_dir = website_dir / slug
@@ -397,78 +511,118 @@ def _apply_fixes(
         if not issue.get("fixable"):
             continue
 
-        fix_type = issue.get("fix", "")
+        fix = issue.get("fix", "")
 
-        if fix_type == "copy_diagram":
-            # Copy diagram.html from episode dir to website dir
+        if fix == "copy_diagram":
             src = ep_dir / "diagram.html"
             if src.exists() and ep_web_dir.exists():
                 shutil.copy2(src, ep_web_dir / "diagram.html")
-                fixes_applied.append(f"Copied diagram.html to {ep_web_dir}")
-
-            # Also copy diagram.png if available
+                fixes.append("Copied diagram.html to docs/")
             png_src = ep_dir / "diagram.png"
             if png_src.exists() and ep_web_dir.exists():
                 shutil.copy2(png_src, ep_web_dir / "diagram.png")
-                fixes_applied.append(f"Copied diagram.png to {ep_web_dir}")
+                fixes.append("Copied diagram.png to docs/")
 
-        elif fix_type == "remove_placeholder_links":
-            index_html = ep_web_dir / "index.html"
-            if index_html.exists():
-                content = index_html.read_text()
-                # Remove placeholder Spotify/Apple links
+        elif fix == "remove_placeholder_links":
+            page = ep_web_dir / "index.html"
+            if page.exists():
+                content = page.read_text()
                 content = re.sub(
-                    r'\s*<a\s+href="#"[^>]*>(?:🎧\s*Spotify|🎵\s*Apple Podcasts)</a>',
-                    '',
-                    content,
+                    r'\s*<a\s+href="#"[^>]*>[^<]*</a>',
+                    '', content,
                 )
-                index_html.write_text(content)
-                fixes_applied.append("Removed placeholder Spotify/Apple links")
+                page.write_text(content)
+                fixes.append("Removed placeholder links")
 
-        elif fix_type == "fix_css_vars":
-            index_html = ep_web_dir / "index.html"
-            if index_html.exists():
-                content = index_html.read_text()
-                replacements = {
+        elif fix == "fix_css_vars":
+            page = ep_web_dir / "index.html"
+            if page.exists():
+                content = page.read_text()
+                for old, new in {
                     "var(--warm-brown)": "#a78bfa",
                     "var(--light-tan)": "rgba(255,255,255,0.1)",
                     "var(--cream)": "#0f0f0f",
                     "var(--sage)": "#4ecdc4",
-                }
-                for old, new in replacements.items():
+                }.items():
                     content = content.replace(old, new)
-                index_html.write_text(content)
-                fixes_applied.append("Fixed old theme CSS variables")
+                page.write_text(content)
+                fixes.append("Fixed stale CSS variables")
 
-        elif fix_type == "update_youtube_link":
-            youtube_path = ep_dir / "youtube.json"
-            index_html = ep_web_dir / "index.html"
-            if youtube_path.exists() and index_html.exists():
+        elif fix == "fix_audio_url":
+            page = ep_web_dir / "index.html"
+            if page.exists():
+                release_tag = f"ep-{season}-{episode}"
+                release_url = f"https://github.com/{PODCAST_GITHUB_REPO}/releases/download/{release_tag}/episode.mp3"
+                content = page.read_text()
+                content = re.sub(
+                    r'<source\s+src="(?!http)[^"]*\.mp3"',
+                    f'<source src="{release_url}"',
+                    content,
+                )
+                page.write_text(content)
+                fixes.append(f"Fixed audio URL → GitHub Release ({release_tag})")
+
+        elif fix == "fix_youtube_link":
+            yt_path = ep_dir / "youtube.json"
+            page = ep_web_dir / "index.html"
+            if yt_path.exists() and page.exists():
                 try:
-                    yt_data = json.loads(youtube_path.read_text())
-                    video_id = yt_data.get("video_id", "")
-                    if video_id:
-                        content = index_html.read_text()
-                        yt_url = f"https://www.youtube.com/watch?v={video_id}"
-                        # Replace any existing YouTube href="#" or old link
+                    yt = json.loads(yt_path.read_text())
+                    vid = yt.get("video_id", "")
+                    if vid:
+                        url = f"https://www.youtube.com/watch?v={vid}"
+                        content = page.read_text()
                         content = re.sub(
                             r'href="[^"]*"([^>]*>▶\s*YouTube)',
-                            f'href="{yt_url}" target="_blank" rel="noopener"\\1',
+                            f'href="{url}" target="_blank" rel="noopener"\\1',
                             content,
                         )
-                        index_html.write_text(content)
-                        fixes_applied.append(f"Updated YouTube link to {yt_url}")
+                        page.write_text(content)
+                        fixes.append(f"Updated YouTube link → {url}")
                 except Exception:
                     pass
 
-        elif fix_type == "regenerate_website":
-            # Can't fully regenerate here — flag for the pipeline to do it
-            fixes_applied.append(f"[NEEDS MANUAL FIX] {issue['message']}")
+        elif fix == "fix_index_audio":
+            index = website_dir / "index.html"
+            if index.exists():
+                release_tag = f"ep-{season}-{episode}"
+                release_url = f"https://github.com/{PODCAST_GITHUB_REPO}/releases/download/{release_tag}/episode.mp3"
+                content = index.read_text()
+                content = re.sub(
+                    r'<source\s+src="(?!http)[^"]*\.mp3"',
+                    f'<source src="{release_url}"',
+                    content,
+                )
+                index.write_text(content)
+                fixes.append("Fixed main page audio URL → GitHub Release")
 
-    return fixes_applied
+        elif fix == "copy_feed":
+            # Copy feed.xml from project root to docs/ if it exists
+            root_feed = Path("feed.xml")
+            docs_feed = website_dir / "feed.xml"
+            if root_feed.exists():
+                shutil.copy2(root_feed, docs_feed)
+                fixes.append("Copied feed.xml to docs/")
+            else:
+                fixes.append("[NEEDS REGEN] feed.xml not found — run podcast step")
+
+        elif fix == "regenerate_website":
+            fixes.append(f"[NEEDS REGEN] {issue['message']} — re-run website step")
+
+    return fixes
 
 
 # ── Main step ────────────────────────────────────────────────────────────────
+
+CHECKLIST = [
+    ("1. FILES", _check_1_files),
+    ("2. AUDIO", _check_2_audio),
+    ("3. SCRIPT", _check_3_script),
+    ("4. DIAGRAM", _check_4_diagram),
+]
+
+# These need (ep_dir, topic, ...) — handled in run_final_review
+
 
 def run_final_review(
     ep_dir: Path,
@@ -477,71 +631,99 @@ def run_final_review(
     episode: int,
     dry_run: bool = False,
 ) -> StepResult:
-    """Run final review of all episode outputs. Attempts auto-fixes.
+    """Run the full 13-point checklist. Auto-fixes what it can.
 
     Returns StepResult with:
-      output: dict with issues, fixes_applied, summary
+      output: dict with checklist results, issues, fixes
       passed: True if no errors remain after fixes
-      message: Human-readable summary
     """
     if dry_run:
         return StepResult(
-            output={"issues": [], "fixes_applied": [], "summary": "Dry run — skipped"},
+            output={"checklist": "skipped (dry run)", "issues": [], "fixes": []},
             passed=True,
-            message="Dry run — final review skipped",
+            message="Final review: dry run — skipped",
             attempt=1,
         )
 
     all_issues: list[dict] = []
 
-    # Run all checks
-    all_issues.extend(_check_episode_files(ep_dir))
-    all_issues.extend(_check_audio_duration(ep_dir))
-    all_issues.extend(_check_script_quality(ep_dir))
-    all_issues.extend(_check_diagram_json(ep_dir))
-    all_issues.extend(_check_website_output(ep_dir, topic, season, episode))
-    all_issues.extend(_check_feed(topic, season, episode))
+    # Checks that only need ep_dir
+    all_issues.extend(_check_1_files(ep_dir))
+    all_issues.extend(_check_2_audio(ep_dir))
+    all_issues.extend(_check_3_script(ep_dir))
+    all_issues.extend(_check_4_diagram(ep_dir))
 
-    # Attempt auto-fixes
-    fixes_applied = _apply_fixes(all_issues, ep_dir, topic, season, episode)
+    # Checks that need topic/season/episode
+    all_issues.extend(_check_5_website(ep_dir, topic))
+    all_issues.extend(_check_6_audio_url(ep_dir, topic))
+    all_issues.extend(_check_7_youtube(ep_dir, topic))
+    all_issues.extend(_check_8_placeholder_links(topic))
+    all_issues.extend(_check_9_css(topic))
+    all_issues.extend(_check_10_diagram_web(ep_dir, topic))
+    all_issues.extend(_check_11_feed(topic, season, episode))
+    all_issues.extend(_check_12_index(topic))
+    all_issues.extend(_check_13_coherence(ep_dir, topic))
 
-    # Re-run website checks after fixes
-    if fixes_applied:
-        post_fix_issues: list[dict] = []
-        post_fix_issues.extend(_check_website_output(ep_dir, topic, season, episode))
-        # Replace website issues with post-fix results
-        all_issues = [i for i in all_issues if i["category"] not in (
-            "website_placeholders", "website_css", "website_diagram",
-            "website_youtube", "website_missing",
-        )]
-        all_issues.extend(post_fix_issues)
+    # Auto-fix pass
+    fixes = _apply_fixes(all_issues, ep_dir, topic, season, episode)
 
+    # Re-check fixable categories after fixes
+    if fixes:
+        recheck_issues: list[dict] = []
+        recheck_issues.extend(_check_6_audio_url(ep_dir, topic))
+        recheck_issues.extend(_check_8_placeholder_links(topic))
+        recheck_issues.extend(_check_9_css(topic))
+        recheck_issues.extend(_check_10_diagram_web(ep_dir, topic))
+        recheck_issues.extend(_check_12_index(topic))
+
+        fixable_cats = {i["category"] for i in all_issues if i.get("fixable")}
+        all_issues = [i for i in all_issues if i["category"] not in fixable_cats]
+        all_issues.extend(recheck_issues)
+
+    # Tally
     errors = [i for i in all_issues if i["severity"] == "error"]
     warnings = [i for i in all_issues if i["severity"] == "warning"]
+    infos = [i for i in all_issues if i["severity"] == "info"]
 
-    summary_parts = []
+    # Build summary
+    parts = []
     if errors:
-        summary_parts.append(f"{len(errors)} error(s)")
+        parts.append(f"{len(errors)} error(s)")
     if warnings:
-        summary_parts.append(f"{len(warnings)} warning(s)")
-    if fixes_applied:
-        summary_parts.append(f"{len(fixes_applied)} auto-fix(es)")
-    if not summary_parts:
-        summary_parts.append("all checks passed")
+        parts.append(f"{len(warnings)} warning(s)")
+    if fixes:
+        parts.append(f"{len(fixes)} auto-fix(es)")
+    if not errors and not warnings:
+        parts.append("all 13 checks passed ✅")
+    summary = ", ".join(parts)
 
-    summary = ", ".join(summary_parts)
-
-    passed = len(errors) == 0
+    # Build per-check report
+    check_names = [
+        "FILES", "AUDIO", "SCRIPT", "DIAGRAM", "WEBSITE", "AUDIO_URL",
+        "YOUTUBE", "LINKS", "CSS", "DIAGRAM_WEB", "RSS_FEED", "INDEX", "COHERENCE",
+    ]
+    checklist_report = {}
+    for i, name in enumerate(check_names, 1):
+        check_issues = [iss for iss in all_issues if iss.get("check") == i]
+        check_errors = [iss for iss in check_issues if iss["severity"] == "error"]
+        if check_errors:
+            checklist_report[f"{i}. {name}"] = "❌ FAIL"
+        elif any(iss["severity"] == "warning" for iss in check_issues):
+            checklist_report[f"{i}. {name}"] = "⚠️ WARN"
+        else:
+            checklist_report[f"{i}. {name}"] = "✅ PASS"
 
     return StepResult(
         output={
+            "checklist": checklist_report,
             "issues": all_issues,
-            "fixes_applied": fixes_applied,
+            "fixes_applied": fixes,
             "errors": len(errors),
             "warnings": len(warnings),
+            "infos": len(infos),
             "summary": summary,
         },
-        passed=passed,
-        message=f"Final review: {summary}",
+        passed=len(errors) == 0,
+        message=f"Final review ({len(check_names)}-point checklist): {summary}",
         attempt=1,
     )

@@ -370,17 +370,31 @@ def run_pipeline(
         )
         save_json(ep_dir / "final_review.json", final_result.output)
 
-        if final_result.output.get("fixes_applied"):
-            for fix in final_result.output["fixes_applied"]:
-                print(f"    ✅ {fix}")
+        # Print checklist
+        checklist = final_result.output.get("checklist", {})
+        if isinstance(checklist, dict):
+            print("\n    ━━━ CHECKLIST ━━━")
+            for check, status in checklist.items():
+                print(f"    {status} {check}")
+            print()
 
-        if final_result.output.get("issues"):
-            for issue in final_result.output["issues"]:
+        if final_result.output.get("fixes_applied"):
+            print("    Auto-fixes applied:")
+            for fix in final_result.output["fixes_applied"]:
+                print(f"      🔧 {fix}")
+            print()
+
+        issues = [i for i in final_result.output.get("issues", [])
+                  if i.get("severity") in ("error", "warning")]
+        if issues:
+            print("    Remaining issues:")
+            for issue in issues:
                 icon = "❌" if issue["severity"] == "error" else "⚠️"
-                print(f"    {icon} {issue['message']}")
+                print(f"      {icon} {issue['message']}")
+            print()
 
         if not final_result.passed:
-            print(f"\n⚠️  Final review found issues — see above for details")
+            print(f"\n⚠️  Final review found errors — episode may not be production-ready")
 
     print("\nPipeline complete!")
     print(f"Outputs saved to: {ep_dir}/")

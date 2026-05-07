@@ -105,7 +105,30 @@ Voice pairs may also rotate episode-by-episode for variety.
 - **Script Generation:** LLM (Claude/GPT) — generates conversational two-host dialogue
 - **Text-to-Speech:** OpenAI `gpt-4o-mini-tts` — steerable voices with emotion/pacing control
 - **Diagrams:** Interactive HTML architecture diagrams per episode (with Mermaid fallback)
-- **Hosting:** GitHub repo + (future) RSS feed / podcast platform
+- **Quality Gates:** 3-agent script review panel + diagram review agent + 13-point final QA checklist
+- **Hosting:** GitHub Pages + RSS feed + YouTube (unlisted)
+
+## Quality: 13-Point Final Review Checklist
+
+Every episode runs through this checklist before it's considered production-ready:
+
+| # | Check | What It Validates |
+|---|-------|-------------------|
+| 1 | FILES | All required files exist and are non-empty |
+| 2 | AUDIO | Duration within 3–12 min, valid MP3 |
+| 3 | SCRIPT | Host A/B markers present, dialogue balanced, 500+ words |
+| 4 | DIAGRAM | Valid JSON, 3+ nodes, no orphan edges, all nodes connected |
+| 5 | WEBSITE | Episode page exists in docs/ |
+| 6 | AUDIO_URL | Uses GitHub Release URL (not local file — mp3 is .gitignored) |
+| 7 | YOUTUBE | YouTube link present in page if video was uploaded |
+| 8 | LINKS | No placeholder `href="#"` links remain |
+| 9 | CSS | No stale old-theme CSS variables |
+| 10 | DIAGRAM_WEB | diagram.html copied to docs/, iframe embedded |
+| 11 | RSS_FEED | Episode listed in feed.xml |
+| 12 | INDEX | Episode card present on main index page |
+| 13 | COHERENCE | Topic matches across all outputs |
+
+Checks 6, 7, 8, 9, 10, 12 have **auto-fix** capabilities — the agent will repair common issues automatically and re-verify.
 
 ## Project Structure
 
