@@ -43,7 +43,7 @@ EPISODES_DIR = "episodes"
 
 # --- Website ---
 WEBSITE_DIR = "docs"
-WEBSITE_URL = "https://yushengauggie.github.io/system-design-podcast"
+WEBSITE_URL = "https://yushengauggie.github.io/byte-by-design"
 
 # --- YouTube Upload ---
 YOUTUBE_CATEGORY_ID = "28"          # Science & Technology
@@ -53,8 +53,8 @@ YOUTUBE_MIN_VIDEO_SIZE_BYTES = 100_000  # 100 KB sanity floor
 # --- Podcast Feed ---
 PODCAST_TITLE = "Byte by Design"
 PODCAST_AUTHOR = "Yusheng Ding"
-PODCAST_WEBSITE = "https://yushengauggie.github.io/system-design-podcast"
+PODCAST_WEBSITE = "https://yushengauggie.github.io/byte-by-design"
 PODCAST_DESCRIPTION = "Two AI hosts break down system design in bite-sized episodes — like overhearing two senior engineers whiteboarding over coffee. Each episode tackles a real interview topic: from URL shorteners to LLM serving platforms, covering requirements, architecture, trade-offs, and how companies like Netflix, Stripe, and Google actually built it. 5-10 minutes, no fluff, interview-ready."
 PODCAST_FEED_FILE = "feed.xml"
-PODCAST_IMAGE_URL = "https://yushengauggie.github.io/system-design-podcast/cover.jpg"
-PODCAST_GITHUB_REPO = "YushengAuggie/system-design-podcast"
+PODCAST_IMAGE_URL = "https://yushengauggie.github.io/byte-by-design/cover.jpg"
+PODCAST_GITHUB_REPO = "YushengAuggie/byte-by-design"
