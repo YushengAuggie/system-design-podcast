@@ -8,7 +8,9 @@ import click
 
 from pipeline.config import DIAGRAM_REVIEW_MAX_CYCLES, REVIEW_MAX_CYCLES
 from pipeline.quality import StepResult
+from pipeline.config import TTS_ENGINE
 from pipeline.steps.audio import run_audio
+from pipeline.steps.audio_v3 import run_audio_v3
 from pipeline.steps.diagram import run_diagram, _json_to_mermaid, _render_html
 from pipeline.steps.diagram_review import run_diagram_review
 from pipeline.steps.podcast import run_podcast
@@ -186,15 +188,25 @@ def run_pipeline(
             print("\nPipeline stopped: No voice selection available for audio generation")
             sys.exit(1)
 
-        _print_step("Audio Generation", "running")
+        _print_step("Audio Generation", "running", f"engine: {TTS_ENGINE}")
         audio_path = ep_dir / "episode.mp3"
-        audio_result = run_audio(
-            script_text,
-            voice_pair["host_a_voice"],
-            voice_pair["host_b_voice"],
-            audio_path,
-            dry_run=dry_run,
-        )
+        tts_engine = voice_pair.get("tts_engine", TTS_ENGINE)
+        if tts_engine == "elevenlabs-v3":
+            audio_result = run_audio_v3(
+                script_text,
+                voice_pair["host_a_voice"],
+                voice_pair["host_b_voice"],
+                audio_path,
+                dry_run=dry_run,
+            )
+        else:
+            audio_result = run_audio(
+                script_text,
+                voice_pair["host_a_voice"],
+                voice_pair["host_b_voice"],
+                audio_path,
+                dry_run=dry_run,
+            )
         _print_step(
             "Audio Generation",
             "passed" if audio_result.passed else "failed",

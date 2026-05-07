@@ -4,7 +4,27 @@
 ANTHROPIC_MODEL = "claude-sonnet-4-20250514"
 OPENAI_TTS_MODEL = "gpt-4o-mini-tts"
 
+# --- TTS Engine ---
+# Options: "elevenlabs-v3" (via Poe API) or "openai" (direct OpenAI TTS)
+TTS_ENGINE = "elevenlabs-v3"
+
+# ElevenLabs v3 settings (via Poe API)
+ELEVENLABS_V3_MODEL = "ElevenLabs-v3"
+ELEVENLABS_V3_CHAR_LIMIT = 4800  # 5000 hard limit, keep buffer
+
 # --- Voice Rotation ---
+# ElevenLabs v3 voice pairs (used when TTS_ENGINE = "elevenlabs-v3")
+SEASON_VOICES_V3: dict[int, tuple[str, str]] = {
+    1: ("Liam", "Bradford"),
+    2: ("Liam", "Bradford"),
+    3: ("James", "Chris"),
+    4: ("James", "Bradford"),
+}
+
+HOST_A_VOICES_V3 = ["Liam", "James", "Chris", "Austin", "Harry"]
+HOST_B_VOICES_V3 = ["Bradford", "Chris", "Hope", "Jessica", "Nichalia Schwartz"]
+
+# OpenAI voice pairs (used when TTS_ENGINE = "openai")
 SEASON_VOICES: dict[int, tuple[str, str]] = {
     1: ("echo", "nova"),
     2: ("echo", "nova"),
