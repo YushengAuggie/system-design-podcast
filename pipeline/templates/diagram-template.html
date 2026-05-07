@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Architecture Diagram</title>
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0f0f0f;
+    color: #e0e0e0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ── Title ───────────────────────────────────── */
+  .diagram-title {
+    text-align: center;
+    padding: 20px 16px 8px;
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: #ffffff;
+    text-shadow: 0 0 30px rgba(108, 99, 255, 0.25);
+  }
+
+  /* ── Canvas ──────────────────────────────────── */
+  .canvas-wrap {
+    position: relative;
+    width: 100%;
+    height: calc(100vh - 110px);
+    overflow: hidden;
+  }
+
+  svg.diagram-svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* ── Nodes ───────────────────────────────────── */
+  .node-group { cursor: pointer; }
+
+  .node-rect {
+    rx: 10; ry: 10;
+    stroke-width: 1.5;
+    transition: filter 0.25s, stroke-width 0.25s;
+  }
+
+  .node-group:hover .node-rect,
+  .node-group.highlighted .node-rect {
+    stroke-width: 2.5;
+    filter: drop-shadow(0 0 12px var(--node-color));
+  }
+
+  .node-group.dimmed { opacity: 0.18; transition: opacity 0.3s; }
+  .node-group:not(.dimmed) { transition: opacity 0.3s; }
+
+  .node-icon {
+    font-size: 16px;
+    text-anchor: middle;
+    dominant-baseline: central;
+    pointer-events: none;
+  }
+
+  .node-label {
+    fill: #ffffff;
+    font-size: 12px;
+    font-weight: 600;
+    text-anchor: middle;
+    dominant-baseline: central;
+    pointer-events: none;
+  }
+
+  /* ── Edges ───────────────────────────────────── */
+  .edge-line {
+    stroke: #444;
+    stroke-width: 1.5;
+    fill: none;
+    transition: stroke 0.25s, stroke-width 0.25s;
+    marker-end: url(#arrowhead);
+  }
+
+  .edge-line.highlighted {
+    stroke: #6c63ff;
+    stroke-width: 2.5;
+    stroke-dasharray: 6 3;
+    animation: dash-flow 0.6s linear infinite;
+  }
+
+  .edge-line.dimmed { opacity: 0.08; transition: opacity 0.3s; }
+  .edge-line:not(.dimmed) { transition: opacity 0.3s; }
+
+  @keyframes dash-flow {
+    to { stroke-dashoffset: -9; }
+  }
+
+  .edge-label {
+    fill: #888;
+    font-size: 10px;
+    text-anchor: middle;
+    dominant-baseline: central;
+    pointer-events: none;
+    transition: fill 0.25s;
+  }
+
+  .edge-label.highlighted { fill: #aaa; }
+  .edge-label.dimmed { opacity: 0.08; }
+
+  /* ── Groups ──────────────────────────────────── */
+  .group-rect {
+    fill: rgba(255, 255, 255, 0.02);
+    stroke: rgba(255, 255, 255, 0.12);
+    stroke-dasharray: 6 4;
+    rx: 12; ry: 12;
+  }
+
+  .group-label {
+    fill: rgba(255, 255, 255, 0.35);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  /* ── Tooltip ─────────────────────────────────── */
+  .tooltip {
+    position: fixed;
+    background: #1a1a2e;
+    border: 1px solid rgba(108, 99, 255, 0.4);
+    border-radius: 10px;
+    padding: 14px 18px;
+    max-width: 300px;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.2s, transform 0.2s;
+    z-index: 100;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  }
+
+  .tooltip.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .tooltip-title {
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin-bottom: 6px;
+    color: #fff;
+  }
+
+  .tooltip-type {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+  }
+
+  .tooltip-desc {
+    font-size: 0.8rem;
+    line-height: 1.45;
+    color: #bbb;
+  }
+
+  /* ── Legend ───────────────────────────────────── */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 14px;
+    padding: 10px 16px 14px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.7rem;
+    color: #888;
+    text-transform: capitalize;
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+
+<div class="diagram-title" id="diagramTitle"></div>
+
+<div class="canvas-wrap">
+  <svg class="diagram-svg" id="svgCanvas">
+    <defs>
+      <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#555" />
+      </marker>
+      <marker id="arrowhead-hl" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#6c63ff" />
+      </marker>
+    </defs>
+  </svg>
+</div>
+
+<div class="legend" id="legend"></div>
+
+<div class="tooltip" id="tooltip">
+  <div class="tooltip-title" id="tooltipTitle"></div>
+  <span class="tooltip-type" id="tooltipType"></span>
+  <div class="tooltip-desc" id="tooltipDesc"></div>
+</div>
+
+<script>
+// ── Color & icon config ──────────────────────────
+const TYPE_COLORS = {
+  client:     '#6c63ff',
+  server:     '#4ecdc4',
+  database:   '#ff6b6b',
+  cache:      '#ffd93d',
+  queue:      '#95e1d3',
+  service:    '#a78bfa',
+  storage:    '#f38181',
+  external:   '#888888',
+  monitoring: '#45b7d1'
+};
+
+const TYPE_ICONS = {
+  client:     '👤',
+  server:     '⚙️',
+  database:   '🗄️',
+  cache:      '⚡',
+  queue:      '📨',
+  service:    '🔧',
+  storage:    '💾',
+  external:   '🌐',
+  monitoring: '📊'
+};
+
+// ── Data injection ───────────────────────────────
+const DATA = {{DIAGRAM_DATA}};
+
+// ── Layout engine (force-directed-ish) ───────────
+function layoutNodes(nodes, edges, groups, width, height) {
+  const padding = 60;
+  const nodeW = 140, nodeH = 52;
+  const usableW = width - padding * 2 - nodeW;
+  const usableH = height - padding * 2 - nodeH;
+
+  // Build adjacency for layering
+  const outgoing = {};
+  const incoming = {};
+  nodes.forEach(n => { outgoing[n.id] = []; incoming[n.id] = []; });
+  edges.forEach(e => {
+    if (outgoing[e.from]) outgoing[e.from].push(e.to);
+    if (incoming[e.to]) incoming[e.to].push(e.from);
+  });
+
+  // Topological layering (BFS from roots)
+  const layers = {};
+  const roots = nodes.filter(n => incoming[n.id].length === 0).map(n => n.id);
+  if (roots.length === 0 && nodes.length > 0) roots.push(nodes[0].id);
+
+  const visited = new Set();
+  let queue = roots.map(id => ({ id, layer: 0 }));
+  let maxLayer = 0;
+
+  while (queue.length > 0) {
+    const next = [];
+    for (const { id, layer } of queue) {
+      if (visited.has(id)) continue;
+      visited.add(id);
+      layers[id] = layer;
+      if (layer > maxLayer) maxLayer = layer;
+      for (const child of (outgoing[id] || [])) {
+        if (!visited.has(child)) {
+          next.push({ id: child, layer: layer + 1 });
+        }
+      }
+    }
+    queue = next;
+  }
+
+  // Assign unvisited nodes to last layer
+  nodes.forEach(n => {
+    if (!visited.has(n.id)) {
+      maxLayer++;
+      layers[n.id] = maxLayer;
+    }
+  });
+
+  // Gather nodes per layer
+  const layerBuckets = {};
+  nodes.forEach(n => {
+    const l = layers[n.id] || 0;
+    if (!layerBuckets[l]) layerBuckets[l] = [];
+    layerBuckets[l].push(n);
+  });
+
+  const numLayers = maxLayer + 1;
+  const positions = {};
+
+  Object.keys(layerBuckets).forEach(l => {
+    const bucket = layerBuckets[l];
+    const layerIdx = parseInt(l);
+    const y = padding + (numLayers > 1 ? (layerIdx / (numLayers - 1)) * usableH : usableH / 2);
+    const count = bucket.length;
+    bucket.forEach((n, i) => {
+      const x = padding + (count > 1 ? (i / (count - 1)) * usableW : usableW / 2);
+      positions[n.id] = { x, y, w: nodeW, h: nodeH };
+    });
+  });
+
+  return positions;
+}
+
+// ── SVG helpers ──────────────────────────────────
+const svgNS = 'http://www.w3.org/2000/svg';
+
+function createSVGElement(tag, attrs) {
+  const el = document.createElementNS(svgNS, tag);
+  for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+  return el;
+}
+
+// ── Render ───────────────────────────────────────
+function render() {
+  const svg = document.getElementById('svgCanvas');
+  const title = document.getElementById('diagramTitle');
+  const legend = document.getElementById('legend');
+  const tooltip = document.getElementById('tooltip');
+
+  title.textContent = DATA.title || 'Architecture Diagram';
+
+  const rect = svg.getBoundingClientRect();
+  const W = rect.width || 1280;
+  const H = rect.height || 600;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+
+  const positions = layoutNodes(DATA.nodes, DATA.edges, DATA.groups || [], W, H);
+
+  // ── Draw groups ─────
+  (DATA.groups || []).forEach(g => {
+    const memberPositions = g.nodeIds.map(id => positions[id]).filter(Boolean);
+    if (memberPositions.length === 0) return;
+
+    const pad = 30;
+    const minX = Math.min(...memberPositions.map(p => p.x)) - pad;
+    const minY = Math.min(...memberPositions.map(p => p.y)) - pad;
+    const maxX = Math.max(...memberPositions.map(p => p.x + p.w)) + pad;
+    const maxY = Math.max(...memberPositions.map(p => p.y + p.h)) + pad;
+
+    const groupRect = createSVGElement('rect', {
+      class: 'group-rect', x: minX, y: minY,
+      width: maxX - minX, height: maxY - minY
+    });
+    svg.appendChild(groupRect);
+
+    const groupLabel = createSVGElement('text', {
+      class: 'group-label', x: minX + 10, y: minY + 16
+    });
+    groupLabel.textContent = g.label;
+    svg.appendChild(groupLabel);
+  });
+
+  // ── Draw edges ──────
+  const edgeElements = [];
+  DATA.edges.forEach(e => {
+    const from = positions[e.from];
+    const to = positions[e.to];
+    if (!from || !to) return;
+
+    const x1 = from.x + from.w / 2;
+    const y1 = from.y + from.h / 2;
+    const x2 = to.x + to.w / 2;
+    const y2 = to.y + to.h / 2;
+
+    // Shorten line to not overlap node rect
+    const dx = x2 - x1, dy = y2 - y1;
+    const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+    const ux = dx / dist, uy = dy / dist;
+
+    const startDist = Math.min(from.w, from.h) / 2 + 4;
+    const endDist = Math.min(to.w, to.h) / 2 + 8;
+
+    const sx = x1 + ux * startDist;
+    const sy = y1 + uy * startDist;
+    const ex = x2 - ux * endDist;
+    const ey = y2 - uy * endDist;
+
+    const line = createSVGElement('line', {
+      class: 'edge-line',
+      x1: sx, y1: sy, x2: ex, y2: ey,
+      'data-from': e.from, 'data-to': e.to
+    });
+    svg.appendChild(line);
+    edgeElements.push({ el: line, from: e.from, to: e.to });
+
+    if (e.label) {
+      const mx = (sx + ex) / 2;
+      const my = (sy + ey) / 2;
+      const labelEl = createSVGElement('text', {
+        class: 'edge-label', x: mx, y: my - 6,
+        'data-from': e.from, 'data-to': e.to
+      });
+      labelEl.textContent = e.label;
+      svg.appendChild(labelEl);
+      edgeElements.push({ el: labelEl, from: e.from, to: e.to, isLabel: true });
+    }
+  });
+
+  // ── Draw nodes ──────
+  const nodeElements = {};
+  DATA.nodes.forEach(n => {
+    const pos = positions[n.id];
+    if (!pos) return;
+    const color = TYPE_COLORS[n.type] || '#888';
+    const icon = TYPE_ICONS[n.type] || '●';
+
+    const g = createSVGElement('g', {
+      class: 'node-group', 'data-id': n.id,
+      style: `--node-color: ${color}`
+    });
+
+    const r = createSVGElement('rect', {
+      class: 'node-rect',
+      x: pos.x, y: pos.y, width: pos.w, height: pos.h,
+      fill: color + '18', stroke: color
+    });
+    g.appendChild(r);
+
+    const iconEl = createSVGElement('text', {
+      class: 'node-icon',
+      x: pos.x + 20, y: pos.y + pos.h / 2
+    });
+    iconEl.textContent = icon;
+    g.appendChild(iconEl);
+
+    const label = createSVGElement('text', {
+      class: 'node-label',
+      x: pos.x + pos.w / 2 + 8, y: pos.y + pos.h / 2
+    });
+    label.textContent = n.label;
+    g.appendChild(label);
+
+    svg.appendChild(g);
+    nodeElements[n.id] = { el: g, data: n };
+  });
+
+  // ── Interactions ────
+  // Build adjacency set
+  const adjacent = {};
+  DATA.nodes.forEach(n => adjacent[n.id] = new Set());
+  DATA.edges.forEach(e => {
+    if (adjacent[e.from]) adjacent[e.from].add(e.to);
+    if (adjacent[e.to]) adjacent[e.to].add(e.from);
+  });
+
+  function highlightNode(nodeId) {
+    const neighbors = adjacent[nodeId] || new Set();
+
+    // Dim all, then highlight connected
+    Object.keys(nodeElements).forEach(id => {
+      const ne = nodeElements[id].el;
+      if (id === nodeId || neighbors.has(id)) {
+        ne.classList.add('highlighted');
+        ne.classList.remove('dimmed');
+      } else {
+        ne.classList.remove('highlighted');
+        ne.classList.add('dimmed');
+      }
+    });
+
+    edgeElements.forEach(ee => {
+      if (ee.from === nodeId || ee.to === nodeId) {
+        ee.el.classList.add('highlighted');
+        ee.el.classList.remove('dimmed');
+        if (!ee.isLabel) ee.el.setAttribute('marker-end', 'url(#arrowhead-hl)');
+      } else {
+        ee.el.classList.remove('highlighted');
+        ee.el.classList.add('dimmed');
+      }
+    });
+  }
+
+  function clearHighlight() {
+    Object.keys(nodeElements).forEach(id => {
+      nodeElements[id].el.classList.remove('highlighted', 'dimmed');
+    });
+    edgeElements.forEach(ee => {
+      ee.el.classList.remove('highlighted', 'dimmed');
+      if (!ee.isLabel) ee.el.setAttribute('marker-end', 'url(#arrowhead)');
+    });
+  }
+
+  // Hover
+  Object.keys(nodeElements).forEach(id => {
+    const g = nodeElements[id].el;
+    g.addEventListener('mouseenter', () => highlightNode(id));
+    g.addEventListener('mouseleave', () => clearHighlight());
+  });
+
+  // Click → tooltip
+  let activeTooltip = null;
+
+  Object.keys(nodeElements).forEach(id => {
+    const g = nodeElements[id].el;
+    const n = nodeElements[id].data;
+
+    g.addEventListener('click', (evt) => {
+      evt.stopPropagation();
+      const color = TYPE_COLORS[n.type] || '#888';
+
+      document.getElementById('tooltipTitle').textContent = n.label;
+      const typeEl = document.getElementById('tooltipType');
+      typeEl.textContent = n.type;
+      typeEl.style.background = color + '30';
+      typeEl.style.color = color;
+      document.getElementById('tooltipDesc').textContent = n.description || 'No description.';
+
+      tooltip.style.left = Math.min(evt.clientX + 12, window.innerWidth - 320) + 'px';
+      tooltip.style.top = Math.min(evt.clientY + 12, window.innerHeight - 150) + 'px';
+      tooltip.classList.add('visible');
+      activeTooltip = id;
+    });
+  });
+
+  document.addEventListener('click', () => {
+    tooltip.classList.remove('visible');
+    activeTooltip = null;
+  });
+
+  // ── Legend ──────────
+  const usedTypes = new Set(DATA.nodes.map(n => n.type));
+  usedTypes.forEach(type => {
+    const color = TYPE_COLORS[type] || '#888';
+    const item = document.createElement('div');
+    item.className = 'legend-item';
+    item.innerHTML = `<span class="legend-dot" style="background:${color}"></span>${type}`;
+    legend.appendChild(item);
+  });
+}
+
+// Init
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', render);
+} else {
+  render();
+}
+</script>
+</body>
+</html>

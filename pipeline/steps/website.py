@@ -83,7 +83,23 @@ def _extract_episode_info(ep_dir: Path) -> dict:
 
 
 def _render_diagram_html(ep_dir: Path, ep_out_dir: Path) -> str:
-    """Convert diagram.mmd → SVG (if mmdc available) and return HTML fragment."""
+    """Render diagram section: prefer interactive HTML, fall back to SVG/Mermaid."""
+    # Priority 1: Interactive diagram HTML
+    diagram_html_path = ep_dir / "diagram.html"
+    if diagram_html_path.exists():
+        # Copy diagram.html to output dir
+        shutil.copy2(diagram_html_path, ep_out_dir / "diagram.html")
+        # Also copy diagram.png as fallback image if available
+        diagram_png = ep_dir / "diagram.png"
+        if diagram_png.exists():
+            shutil.copy2(diagram_png, ep_out_dir / "diagram.png")
+        return (
+            '<iframe src="diagram.html" '
+            'style="width:100%; height:500px; border:none; border-radius:8px;" '
+            'loading="lazy" title="Interactive Architecture Diagram"></iframe>'
+        )
+
+    # Priority 2: SVG from Mermaid
     mmd_path = ep_dir / "diagram.mmd"
     if not mmd_path.exists():
         return '<div class="mermaid-placeholder">Architecture diagram coming soon.</div>'
@@ -225,9 +241,12 @@ def _render_episode_card(info: dict, website_dir: Path) -> str:
 
     ep_out_dir = website_dir / slug
     has_audio = (ep_out_dir / "episode.mp3").exists()
-    has_diagram = (ep_out_dir / "diagram.svg").exists()
+    has_diagram_png = (ep_out_dir / "diagram.png").exists()
+    has_diagram_svg = (ep_out_dir / "diagram.svg").exists()
 
-    if has_diagram:
+    if has_diagram_png:
+        thumbnail = f'<img src="{slug}/diagram.png" alt="{topic} architecture diagram" loading="lazy" />'
+    elif has_diagram_svg:
         thumbnail = f'<img src="{slug}/diagram.svg" alt="{topic} architecture diagram" loading="lazy" />'
     else:
         thumbnail = '<div class="card-diagram-placeholder">🏗️<span>Diagram</span></div>'

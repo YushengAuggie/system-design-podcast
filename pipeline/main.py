@@ -6,13 +6,15 @@ from pathlib import Path
 
 import click
 
-from pipeline.config import REVIEW_MAX_CYCLES
+from pipeline.config import DIAGRAM_REVIEW_MAX_CYCLES, REVIEW_MAX_CYCLES
 from pipeline.quality import StepResult
 from pipeline.steps.audio import run_audio
-from pipeline.steps.diagram import run_diagram
+from pipeline.steps.diagram import run_diagram, _json_to_mermaid, _render_html
+from pipeline.steps.diagram_review import run_diagram_review
 from pipeline.steps.podcast import run_podcast
 from pipeline.steps.research import run_research
 from pipeline.steps.review import run_review
+from pipeline.steps.screenshot import run_screenshot
 from pipeline.steps.script import run_script
 from pipeline.steps.voices import run_voices
 from pipeline.steps.website import run_website
@@ -20,7 +22,11 @@ from pipeline.steps.youtube import run_youtube
 from pipeline.utils import episode_dir, load_json, load_text, save_json, save_text
 
 # Ordered pipeline steps
-STEPS = ["research", "script", "review", "voices", "audio", "diagram", "youtube", "podcast", "website"]
+STEPS = [
+    "research", "script", "review", "voices", "audio",
+    "diagram", "diagram_review", "screenshot",
+    "youtube", "podcast", "website",
+]
 
 
 def _print_step(name: str, status: str, message: str = "") -> None:
@@ -61,6 +67,7 @@ def run_pipeline(
     research_data: dict = {}
     script_text: str = ""
     voice_pair: dict = {}
+    diagram_data: dict = {}
 
     # Load prior outputs if starting from a later step
     if start_step and start_step != "research":
@@ -80,6 +87,12 @@ def run_pipeline(
         if voice_path.exists():
             voice_pair = load_json(voice_path)
             print(f"  Loaded prior voice selection from {voice_path}")
+
+    if start_step and start_step in ("diagram_review", "screenshot"):
+        diagram_path = ep_dir / "diagram.json"
+        if diagram_path.exists():
+            diagram_data = load_json(diagram_path)
+            print(f"  Loaded prior diagram from {diagram_path}")
 
     print()
 
@@ -190,26 +203,85 @@ def run_pipeline(
             print(f"\nPipeline stopped: Audio generation failed — {audio_result.message}")
             sys.exit(1)
 
-    # --- Step: Diagram Generation ---
-    if "diagram" in steps_to_run:
+    # --- Step: Diagram Generation + Review loop ---
+    if "diagram" in steps_to_run or "diagram_review" in steps_to_run:
         if not script_text:
             script_path = ep_dir / "script.md"
             if script_path.exists():
                 script_text = load_text(script_path)
 
-        _print_step("Diagram Generation", "running")
-        diagram_result = run_diagram(research_data, script_text, dry_run=dry_run)
-        _print_step(
-            "Diagram Generation",
-            "passed" if diagram_result.passed else "failed",
-            diagram_result.message,
-        )
-        if diagram_result.passed:
-            save_text(ep_dir / "diagram.mmd", diagram_result.output)
+        run_diagram_step = "diagram" in steps_to_run
+        run_diagram_review_step = "diagram_review" in steps_to_run
+
+        for cycle in range(1, DIAGRAM_REVIEW_MAX_CYCLES + 1):
+            # Generate diagram
+            if run_diagram_step:
+                _print_step("Diagram Generation", "running", f"cycle {cycle}")
+                diagram_result = run_diagram(research_data, script_text, dry_run=dry_run, ep_dir=ep_dir)
+                _print_step(
+                    "Diagram Generation",
+                    "passed" if diagram_result.passed else "failed",
+                    diagram_result.message,
+                )
+
+                if diagram_result.passed:
+                    diagram_data = diagram_result.output
+                    # Save all diagram outputs
+                    save_json(ep_dir / "diagram.json", diagram_data)
+                    mermaid_code = _json_to_mermaid(diagram_data)
+                    save_text(ep_dir / "diagram.mmd", mermaid_code)
+                    html_content = _render_html(diagram_data)
+                    save_text(ep_dir / "diagram.html", html_content)
+                    print(f"  Saved: diagram.json, diagram.html, diagram.mmd")
+                else:
+                    print(f"\nWarning: Diagram generation failed — {diagram_result.message}")
+                    # Save what we have
+                    if diagram_result.output:
+                        save_json(ep_dir / "diagram.json", diagram_result.output)
+                    break
+
+            # Review diagram
+            if run_diagram_review_step and diagram_data:
+                _print_step("Diagram Review", "running", f"cycle {cycle}")
+                review_result = run_diagram_review(
+                    diagram_data, research_data, script_text, dry_run=dry_run,
+                )
+                _print_step(
+                    "Diagram Review",
+                    "passed" if review_result.passed else "failed",
+                    review_result.message,
+                )
+                save_json(ep_dir / "diagram_review.json", review_result.output)
+
+                if review_result.passed:
+                    break
+
+                if cycle < DIAGRAM_REVIEW_MAX_CYCLES:
+                    print(f"  Regenerating diagram with feedback...")
+                    run_diagram_step = True
+                else:
+                    print(f"\nWarning: Diagram review failed after {DIAGRAM_REVIEW_MAX_CYCLES} cycles (non-fatal)")
+                    break
+            else:
+                break
+
+    # --- Step: Screenshot ---
+    if "screenshot" in steps_to_run:
+        html_path = ep_dir / "diagram.html"
+        png_path = ep_dir / "diagram.png"
+
+        if html_path.exists():
+            _print_step("Screenshot", "running")
+            screenshot_result = run_screenshot(html_path, png_path, dry_run=dry_run)
+            _print_step(
+                "Screenshot",
+                "passed" if screenshot_result.passed else "failed",
+                screenshot_result.message,
+            )
+            if not screenshot_result.passed:
+                print(f"\nWarning: Screenshot failed — {screenshot_result.message} (non-fatal)")
         else:
-            print(f"\nWarning: Diagram generation failed — {diagram_result.message}")
-            # Non-fatal: save what we have anyway
-            save_text(ep_dir / "diagram.mmd", diagram_result.output)
+            print("  Skipping screenshot: no diagram.html found")
 
     # --- Step: YouTube Upload ---
     if "youtube" in steps_to_run:

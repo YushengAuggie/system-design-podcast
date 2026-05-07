@@ -6,7 +6,7 @@
     <description>Two AI hosts break down system design in bite-sized episodes — like overhearing two senior engineers whiteboarding over coffee. Each episode tackles a real interview topic: from URL shorteners to LLM serving platforms, covering requirements, architecture, trade-offs, and how companies like Netflix, Stripe, and Google actually built it. 5-10 minutes, no fluff, interview-ready.</description>
     <language>en</language>
     <copyright>© 2026 Yusheng Ding</copyright>
-    <lastBuildDate>Thu, 07 May 2026 06:38:54 +0000</lastBuildDate>
+    <lastBuildDate>Thu, 07 May 2026 07:27:11 +0000</lastBuildDate>
     <generator>byte-by-design pipeline</generator>
     <atom:link href="https://yushengauggie.github.io/byte-by-design/feed.xml" rel="self" type="application/rss+xml" />
     <itunes:author>Yusheng Ding</itunes:author>
@@ -17,6 +17,24 @@
       <itunes:name>Yusheng Ding</itunes:name>
     </itunes:owner>
     <itunes:image href="https://yushengauggie.github.io/byte-by-design/cover.jpg" />
+    <item>
+      <title>S01E01: URL Shortener</title>
+      <link>https://yushengauggie.github.io/byte-by-design/episodes/s01e01</link>
+      <description>URL shorteners like bit.ly and tinyurl.com appear simple but involve complex system design challenges including distributed ID generation, caching strategies, and handling massive read/write ratios at scale.
+
+Season 1, Episode 1 of Byte by Design.</description>
+      <pubDate>Thu, 07 May 2026 07:27:07 +0000</pubDate>
+      <guid>https://yushengauggie.github.io/byte-by-design/episodes/s01e01</guid>
+      <enclosure url="https://github.com/YushengAuggie/byte-by-design/releases/download/ep-1-1/episode.mp3" type="audio/mpeg" length="2122413" />
+      <itunes:duration>8:50</itunes:duration>
+      <itunes:episode>1</itunes:episode>
+      <itunes:season>1</itunes:season>
+      <itunes:summary>URL shorteners like bit.ly and tinyurl.com appear simple but involve complex system design challenges including distributed ID generation, caching strategies, and handling massive read/write ratios at scale.
+
+Season 1, Episode 1 of Byte by Design.</itunes:summary>
+      <itunes:explicit>no</itunes:explicit>
+      <itunes:image href="https://yushengauggie.github.io/byte-by-design/cover.jpg" />
+    </item>
     <item>
       <title>S01E01: URL Shortener</title>
       <link>https://yushengauggie.github.io/byte-by-design/episodes/s01e01</link>

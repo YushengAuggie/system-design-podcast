@@ -104,7 +104,7 @@ Voice pairs may also rotate episode-by-episode for variety.
 
 - **Script Generation:** LLM (Claude/GPT) — generates conversational two-host dialogue
 - **Text-to-Speech:** OpenAI `gpt-4o-mini-tts` — steerable voices with emotion/pacing control
-- **Diagrams:** One architecture diagram per episode (Mermaid/Excalidraw)
+- **Diagrams:** Interactive HTML architecture diagrams per episode (with Mermaid fallback)
 - **Hosting:** GitHub repo + (future) RSS feed / podcast platform
 
 ## Project Structure
@@ -112,19 +112,36 @@ Voice pairs may also rotate episode-by-episode for variety.
 ```
 system-design-podcast/
 ├── README.md
+├── pipeline/
+│   ├── main.py                # CLI orchestrator
+│   ├── config.py              # Pipeline configuration
+│   ├── llm.py                 # LLM calling utility (Poe/OpenAI)
+│   ├── quality.py             # Quality gate pattern
+│   ├── templates/
+│   │   └── diagram-template.html  # Interactive diagram HTML template
+│   └── steps/
+│       ├── research.py        # Step 1: Topic research
+│       ├── script.py          # Step 2: Script generation
+│       ├── review.py          # Step 3: Script review panel
+│       ├── voices.py          # Step 4: Voice selection
+│       ├── audio.py           # Step 5: TTS audio generation
+│       ├── diagram.py         # Step 6: Interactive diagram generation
+│       ├── diagram_review.py  # Step 6b: Diagram review agent
+│       ├── screenshot.py      # Step 6c: Diagram screenshot (Playwright)
+│       ├── youtube.py         # Step 7: YouTube upload
+│       ├── podcast.py         # Step 8: Podcast RSS feed
+│       └── website.py         # Step 9: Static website generation
 ├── episodes/
 │   └── 01-url-shortener/
+│       ├── research.json      # Research data
 │       ├── script.md          # Two-host dialogue script
 │       ├── episode.mp3        # Final audio
-│       ├── diagram.png        # Architecture diagram
-│       └── references.md      # Eng blog links, papers cited
-├── scripts/
-│   ├── generate-script.sh     # Generate episode script from topic
-│   ├── generate-audio.sh      # Convert script to multi-voice audio
-│   └── config.env.example     # Voice & model config
-├── templates/
-│   └── episode-template.md    # Standard episode script template
-└── voice-samples/             # TTS voice audition clips
+│       ├── diagram.json       # Structured diagram data
+│       ├── diagram.html       # Interactive architecture diagram
+│       ├── diagram.png        # Screenshot for thumbnails
+│       └── diagram.mmd        # Mermaid fallback
+├── docs/                      # Generated static website
+└── pyproject.toml
 ```
 
 ## Contributing
