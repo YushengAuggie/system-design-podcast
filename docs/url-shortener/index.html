@@ -54,10 +54,7 @@
           Your browser does not support the audio element.
         </audio>
         <div class="listen-on">
-          <span style="font-size:0.8rem; color:var(--text-light); align-self:center;">Also on:</span>
-          <a href="#" class="listen-btn" aria-label="Spotify (coming soon)">🎧 Spotify</a>
-          <a href="#" class="listen-btn" aria-label="YouTube (coming soon)">▶ YouTube</a>
-          <a href="#" class="listen-btn" aria-label="Apple Podcasts (coming soon)">🎵 Apple Podcasts</a>
+          <a href="https://www.youtube.com/watch?v=c_cLmtCwIE4" class="listen-btn" target="_blank" rel="noopener">▶ YouTube</a>
         </div>
       </section>
 
@@ -96,9 +93,9 @@
           <span class="chevron">▼</span>
         </button>
         <div id="transcript-body" class="transcript-content">
-<h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--warm-brown); margin:20px 0 10px;">Metadata</h3>
-<hr style="border:none; border-top:1px solid var(--light-tan); margin:16px 0;" />
-<h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--warm-brown); margin:20px 0 10px;">Segment 1: The Problem (~2 min)</h3>
+<h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--accent); margin:20px 0 10px;">Metadata</h3>
+<hr style="border:none; border-top:1px solid var(--border); margin:16px 0;" />
+<h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--accent); margin:20px 0 10px;">Segment 1: The Problem (~2 min)</h3>
 <p class="host-line host-a"><span class="host-label">Alex</span> So Nova, you know what&#x27;s hilarious? Everyone thinks URL shorteners are like the &quot;Hello World&quot; of system design—</p>
 <p class="host-line host-b"><span class="host-label">Blake</span> Oh god, here we go. Let me guess, someone in your interview loop said &quot;it&#x27;s just a hash table, right?&quot;</p>
 <p class="host-line host-a"><span class="host-label">Alex</span> *laughs* Worse! They said they&#x27;d &quot;just use MD5 and call it a day.&quot; I&#x27;m like, buddy, Bitly processes 600 million clicks per month. You think they&#x27;re just running `md5sum` on a Linux box somewhere?</p>
@@ -108,8 +105,8 @@
 <p class="host-line host-a"><span class="host-label">Alex</span> It&#x27;s like... okay you know those viral TikToks that get shared everywhere? Imagine if every share required your database to not die.</p>
 <p class="host-line host-b"><span class="host-label">Blake</span> *laughs* &quot;Database death by TikTok&quot; should be a monitoring alert category. But seriously, then you add analytics on top - everyone wants to know clicks by country, by time, by device...</p>
 <p class="host-line host-a"><span class="host-label">Alex</span> Suddenly your &quot;simple&quot; URL shortener is also a real-time analytics platform. Because of course it is.</p>
-<hr style="border:none; border-top:1px solid var(--light-tan); margin:16px 0;" />
-<h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--warm-brown); margin:20px 0 10px;">Segment 2: Interview Framework (~3 min)</h3>
+<hr style="border:none; border-top:1px solid var(--border); margin:16px 0;" />
+<h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--accent); margin:20px 0 10px;">Segment 2: Interview Framework (~3 min)</h3>
 <p class="host-line host-b"><span class="host-label">Blake</span> Okay but let&#x27;s say I&#x27;m in an interview and they throw this at me. Where do I even start without looking like an idiot?</p>
 <p class="host-line host-a"><span class="host-label">Alex</span> Requirements first, always. Functional stuff - shorten URLs, redirect fast, maybe custom aliases if you&#x27;re feeling fancy. Non-functional - it needs to be stupid fast, never go down, and handle billions of URLs.</p>
 <p class="host-line host-b"><span class="host-label">Blake</span> Billions? Okay, math time. Let&#x27;s say... 100 million URLs shortened daily?</p>
@@ -121,8 +118,8 @@
 <p class="host-line host-b"><span class="host-label">Blake</span> So architecture-wise... load balancer, web servers, some encoding service to generate short codes, database for mappings, definitely caching because of that insane read ratio—</p>
 <p class="host-line host-a"><span class="host-label">Alex</span> Don&#x27;t forget rate limiting! Trust me, the first thing that&#x27;ll happen is someone will try to shorten the entire internet.</p>
 <p class="host-line host-b"><span class="host-label">Blake</span> *laughs* &quot;Sir, why did you try to shorten 50,000 URLs in the last minute?&quot; &quot;I was bored.&quot;</p>
-<hr style="border:none; border-top:1px solid var(--light-tan); margin:16px 0;" />
-<h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--warm-brown); margin:20px 0 10px;">Segment 3: Deep Dive (~3 min)</h3>
+<hr style="border:none; border-top:1px solid var(--border); margin:16px 0;" />
+<h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--accent); margin:20px 0 10px;">Segment 3: Deep Dive (~3 min)</h3>
 <p class="host-line host-a"><span class="host-label">Alex</span> Alright, here&#x27;s where it gets spicy. How do you actually generate those short codes without everything exploding?</p>
 <p class="host-line host-b"><span class="host-label">Blake</span> Oh, I know this one! You hash the original URL with MD5 and take the first—</p>
 <p class="host-line host-a"><span class="host-label">Alex</span> NO. Stop. Bad Nova.</p>
@@ -140,8 +137,8 @@
 <p class="host-line host-a"><span class="host-label">Alex</span> Oh absolutely. Cache the popular URLs, use LRU eviction, suddenly 90% of reads never touch your database. It&#x27;s beautiful.</p>
 <p class="host-line host-b"><span class="host-label">Blake</span> Until you have to deal with cache invalidation for custom URLs and expiration dates and... *groans* why is everything so complicated?</p>
 <p class="host-line host-a"><span class="host-label">Alex</span> Because distributed systems hate us personally.</p>
-<hr style="border:none; border-top:1px solid var(--light-tan); margin:16px 0;" />
-<h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--warm-brown); margin:20px 0 10px;">Segment 4: How They Actually Built It (~2 min)</h3>
+<hr style="border:none; border-top:1px solid var(--border); margin:16px 0;" />
+<h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--accent); margin:20px 0 10px;">Segment 4: How They Actually Built It (~2 min)</h3>
 <p class="host-line host-b"><span class="host-label">Blake</span> So what does Bitly actually do in production? Please tell me it&#x27;s not just &quot;MySQL and prayers.&quot;</p>
 <p class="host-line host-a"><span class="host-label">Alex</span> *laughs* They started with MySQL but quickly realized that wasn&#x27;t gonna scale. Now they&#x27;re all distributed with multiple data centers and aggressive caching everywhere.</p>
 <p class="host-line host-b"><span class="host-label">Blake</span> Their encoding is pretty clever too, right? It&#x27;s not just sequential IDs?</p>
@@ -152,8 +149,8 @@
 <p class="host-line host-a"><span class="host-label">Alex</span> Exactly! Bitly&#x27;s engineering blog talks about how much effort goes into detecting spam and malicious redirects. It&#x27;s not just a scaling problem, it&#x27;s a security problem.</p>
 <p class="host-line host-b"><span class="host-label">Blake</span> So you need machine learning for abuse detection, real-time threat intelligence, probably manual review queues... this &quot;simple&quot; URL shortener keeps getting more complex.</p>
 <p class="host-line host-a"><span class="host-label">Alex</span> Welcome to production systems! Everything is harder than it looks.</p>
-<hr style="border:none; border-top:1px solid var(--light-tan); margin:16px 0;" />
-<h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--warm-brown); margin:20px 0 10px;">Segment 5: Interview Tips (~1 min)</h3>
+<hr style="border:none; border-top:1px solid var(--border); margin:16px 0;" />
+<h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--accent); margin:20px 0 10px;">Segment 5: Interview Tips (~1 min)</h3>
 <p class="host-line host-b"><span class="host-label">Blake</span> Okay, rapid-fire interview tips before we wrap up?</p>
 <p class="host-line host-a"><span class="host-label">Alex</span> Start simple! Don&#x27;t immediately jump to &quot;I&#x27;ll use Kafka and seventeen microservices.&quot; Show you understand the problem first.</p>
 <p class="host-line host-b"><span class="host-label">Blake</span> And please talk about the read-heavy nature. So many people try to optimize for writes when 99% of traffic is reads.</p>
@@ -165,8 +162,8 @@
 <p class="host-line host-b"><span class="host-label">Blake</span> Plus there&#x27;s always another layer of complexity to explore if you have time left over.</p>
 <p class="host-line host-a"><span class="host-label">Alex</span> Alright, that&#x27;s a wrap on URL shorteners! Next week we&#x27;re tackling chat systems, which are somehow even more deceptively complex.</p>
 <p class="host-line host-b"><span class="host-label">Blake</span> Can&#x27;t wait to explain why &quot;just use WebSockets&quot; isn&#x27;t the answer to everything.</p>
-<hr style="border:none; border-top:1px solid var(--light-tan); margin:16px 0;" />
-<h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--warm-brown); margin:20px 0 10px;">References</h3>
+<hr style="border:none; border-top:1px solid var(--border); margin:16px 0;" />
+<h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--accent); margin:20px 0 10px;">References</h3>
         </div>
       </section>
 
@@ -186,7 +183,7 @@
 
       <div class="sidebar-card">
         <h3>Episode Info</h3>
-        <p style="font-size:0.85rem; color:var(--text-light); line-height:1.6;">
+        <p style="font-size:0.85rem; color:var(--text-dim); line-height:1.6;">
           <strong>Hosts:</strong> Alex &amp; Blake (AI)<br />
           <strong>Season:</strong> 1<br />
           <strong>Episode:</strong> 1<br />
@@ -197,7 +194,7 @@
 
       <div class="sidebar-card">
         <h3>More Episodes</h3>
-        <p style="font-size:0.85rem; color:var(--text-light);">
+        <p style="font-size:0.85rem; color:var(--text-dim);">
           <a href="../index.html">← Back to all episodes</a>
         </p>
       </div>

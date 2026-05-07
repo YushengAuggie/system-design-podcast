@@ -7,7 +7,7 @@
     <language>en</language>
     <copyright>© 2026 Yusheng Ding</copyright>
     <lastBuildDate>Thu, 07 May 2026 06:38:54 +0000</lastBuildDate>
-    <generator>system-design-podcast pipeline</generator>
+    <generator>byte-by-design pipeline</generator>
     <atom:link href="https://yushengauggie.github.io/byte-by-design/feed.xml" rel="self" type="application/rss+xml" />
     <itunes:author>Yusheng Ding</itunes:author>
     <itunes:subtitle>Two AI hosts break down system design in bite-sized episodes — like overhearing two senior engineers whiteboarding over coffee. Each episode tackles a real interview topic: from URL shorteners to LLM serving platforms, covering requirements, architecture, trade-offs, and how companies like Netflix, Stripe, and Google actually built it. 5-10 minutes, no fluff, interview-ready.</itunes:subtitle>
