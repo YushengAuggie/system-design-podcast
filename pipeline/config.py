@@ -42,7 +42,7 @@ EXPECTED_SEGMENTS = 5
 EPISODES_DIR = "episodes"
 
 # --- Website ---
-WEBSITE_DIR = "website"
+WEBSITE_DIR = "docs"
 WEBSITE_URL = "https://yushengauggie.github.io/system-design-podcast"
 
 # --- YouTube Upload ---

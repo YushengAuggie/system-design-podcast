@@ -1,9 +1,22 @@
-"""Shared LLM calling utility supporting Anthropic and OpenAI."""
+"""Shared LLM calling utility supporting Poe (OpenAI-compatible) and OpenAI TTS."""
 
 import os
 
-import anthropic
 import openai
+
+# --- Poe API (OpenAI-compatible) ---
+POE_BASE_URL = "https://api.poe.com/v1"
+POE_DEFAULT_MODEL = "claude-sonnet-4"
+
+
+def _get_poe_client() -> openai.OpenAI:
+    """Create an OpenAI client pointed at Poe's API."""
+    api_key = os.environ.get("POE_API_KEY")
+    if not api_key:
+        raise RuntimeError(
+            "POE_API_KEY not set. Add it to your .env or environment variables."
+        )
+    return openai.OpenAI(api_key=api_key, base_url=POE_BASE_URL)
 
 
 def call_anthropic(
@@ -12,19 +25,22 @@ def call_anthropic(
     max_tokens: int = 4096,
     temperature: float = 0.7,
 ) -> str:
-    """Call Anthropic Claude API and return the text response."""
-    client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
-    messages = [{"role": "user", "content": prompt}]
-    kwargs: dict = {
-        "model": os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-20250514"),
-        "max_tokens": max_tokens,
-        "messages": messages,
-        "temperature": temperature,
-    }
+    """Call Claude via Poe's OpenAI-compatible API and return the text response."""
+    client = _get_poe_client()
+    model = os.environ.get("POE_MODEL", POE_DEFAULT_MODEL)
+
+    messages: list[dict] = []
     if system:
-        kwargs["system"] = system
-    response = client.messages.create(**kwargs)
-    return response.content[0].text
+        messages.append({"role": "system", "content": system})
+    messages.append({"role": "user", "content": prompt})
+
+    response = client.chat.completions.create(
+        model=model,
+        messages=messages,
+        max_tokens=max_tokens,
+        temperature=temperature,
+    )
+    return response.choices[0].message.content
 
 
 def call_openai_tts(
