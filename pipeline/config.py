@@ -14,15 +14,17 @@ ELEVENLABS_V3_CHAR_LIMIT = 4800  # 5000 hard limit, keep buffer
 
 # --- Voice Rotation ---
 # ElevenLabs v3 voice pairs (used when TTS_ENGINE = "elevenlabs-v3")
+# Locked to Liam + Bradford — proven combo with clear voice distinction.
+# Do NOT randomize; other v3 voice combos may collapse to a single voice.
 SEASON_VOICES_V3: dict[int, tuple[str, str]] = {
     1: ("Liam", "Bradford"),
     2: ("Liam", "Bradford"),
-    3: ("James", "Chris"),
-    4: ("James", "Bradford"),
+    3: ("Liam", "Bradford"),
+    4: ("Liam", "Bradford"),
 }
 
-HOST_A_VOICES_V3 = ["Liam", "James", "Chris", "Austin", "Harry"]
-HOST_B_VOICES_V3 = ["Bradford", "Chris", "Hope", "Jessica", "Nichalia Schwartz"]
+HOST_A_VOICES_V3 = ["Liam"]
+HOST_B_VOICES_V3 = ["Bradford"]
 
 # OpenAI voice pairs (used when TTS_ENGINE = "openai")
 SEASON_VOICES: dict[int, tuple[str, str]] = {
@@ -35,7 +37,8 @@ SEASON_VOICES: dict[int, tuple[str, str]] = {
 HOST_A_VOICES = ["alloy", "echo", "onyx", "ash", "sage"]
 HOST_B_VOICES = ["nova", "shimmer", "fable", "coral", "ballad"]
 
-SEASON_DEFAULT_PROBABILITY = 0.70
+# Always use season default voices (no randomization for v3)
+SEASON_DEFAULT_PROBABILITY = 1.0
 
 # --- Word Limits ---
 SCRIPT_WORD_MIN = 750

@@ -505,11 +505,15 @@ def _check_12_index(topic: str) -> list[dict]:
     audio_srcs = re.findall(r'<source\s+src="([^"]+)"', content)
     for src in audio_srcs:
         if not src.startswith("http") and src.endswith(".mp3"):
-            issues.append({
-                "check": 12, "severity": "error", "category": "index_audio_local",
-                "message": f"Main page audio uses local path '{src}'",
-                "fixable": True, "fix": "fix_index_audio",
-            })
+            # Local mp3 paths are force-included via .gitignore !docs/**/*.mp3
+            # Only error if the file doesn't actually exist in docs/
+            mp3_file = Path(WEBSITE_DIR) / src
+            if not mp3_file.exists():
+                issues.append({
+                    "check": 12, "severity": "error", "category": "index_audio_local",
+                    "message": f"Main page audio file missing: '{src}' not found in docs/",
+                    "fixable": False,
+                })
 
     return issues
 
