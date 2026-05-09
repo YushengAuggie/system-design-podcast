@@ -20,12 +20,13 @@ FONT_NODE = 13
 FONT_EDGE = 10
 FONT_GROUP = 11
 FONT_TITLE = 20
-H_GAP = 40
-V_GAP = 70
-GROUP_PAD_X = 24
-GROUP_PAD_Y = 32
-GROUP_LABEL_H = 22
-CANVAS_PAD = 40
+H_GAP = 60
+V_GAP = 90
+GROUP_PAD_X = 30
+GROUP_PAD_Y = 38
+GROUP_LABEL_H = 26
+CANVAS_PAD = 50
+EDGE_LABEL_PAD = 6  # min distance between edge labels and nodes
 
 # ── Color palette (dark theme, high contrast) ──
 TYPE_COLORS = {
@@ -400,7 +401,84 @@ function edgePath(from, to) {{
     d = `M${{x1}},${{y1}} C${{mx}},${{y1}} ${{mx}},${{y2}} ${{x2}},${{y2}}`;
   }}
 
-  return {{ d, mx, my }};
+  return {{ d, mx, my, x1, y1, x2, y2 }};
+}}
+
+/* ── Edge label overlap avoidance ── */
+function resolveEdgeLabelPositions(edgeInfos, positions) {{
+  // edgeInfos: [{{ mx, my, label, from, to, x1, y1, x2, y2 }}]
+  // Returns adjusted positions so labels don't overlap nodes or each other
+  const PAD = {EDGE_LABEL_PAD};
+  const LABEL_H = 16;
+  const nodeRects = Object.values(positions);
+
+  function overlapsNode(lx, ly, lw) {{
+    for (const r of nodeRects) {{
+      if (lx + lw/2 > r.x - PAD && lx - lw/2 < r.x + r.w + PAD &&
+          ly + LABEL_H/2 > r.y - PAD && ly - LABEL_H/2 < r.y + r.h + PAD) {{
+        return true;
+      }}
+    }}
+    return false;
+  }}
+
+  function overlapsOtherLabel(lx, ly, lw, placed) {{
+    for (const p of placed) {{
+      if (Math.abs(lx - p.x) < (lw + p.w) / 2 + PAD &&
+          Math.abs(ly - p.y) < LABEL_H + PAD) {{
+        return true;
+      }}
+    }}
+    return false;
+  }}
+
+  const placed = [];
+  const results = [];
+
+  for (const info of edgeInfos) {{
+    const {{ mx, my, x1, y1, x2, y2 }} = info;
+    const lw = (info.label || '').length * 5.5 + 14;
+
+    // Generate candidate positions along the edge path and perpendicular to it
+    const dx = x2 - x1, dy = y2 - y1;
+    const len = Math.sqrt(dx*dx + dy*dy) || 1;
+    const ux = dx / len, uy = dy / len;  // unit along edge
+    const px = -uy, py = ux;              // perpendicular unit
+
+    const candidates = [];
+    // Positions at various t values along the edge
+    for (const t of [0.5, 0.35, 0.65, 0.25, 0.75]) {{
+      const bx = x1 + dx * t, by = y1 + dy * t;
+      // At each t, try on-edge and offset perpendicular
+      for (const perpDist of [0, -22, 22, -40, 40]) {{
+        candidates.push([bx + px * perpDist, by + py * perpDist]);
+      }}
+    }}
+    // Also try more aggressive perpendicular offsets from midpoint
+    for (const perpDist of [-55, 55, -70, 70]) {{
+      candidates.push([mx + px * perpDist, my + py * perpDist]);
+    }}
+
+    let bestX = mx, bestY = my;
+    let found = false;
+    for (const [tx, ty] of candidates) {{
+      if (!overlapsNode(tx, ty, lw) && !overlapsOtherLabel(tx, ty, lw, placed)) {{
+        bestX = tx; bestY = ty;
+        found = true;
+        break;
+      }}
+    }}
+
+    if (!found) {{
+      // Last resort: push way out perpendicular
+      bestX = mx + px * 80;
+      bestY = my + py * 80;
+    }}
+
+    placed.push({{ x: bestX, y: bestY, w: lw }});
+    results.push({{ x: bestX, y: bestY }});
+  }}
+  return results;
 }}
 
 function truncLabel(text, maxLen) {{
@@ -431,13 +509,32 @@ function render() {{
     svg.appendChild(lbl);
   }});
 
-  // ── Edges ──
+  // ── Edges (first pass: compute paths and collect label info) ──
   const edgeEls = [];
+  const edgePaths = [];
+  const edgeLabelInfos = [];
+
   DATA.edges.forEach(e => {{
     const f = positions[e.from], t = positions[e.to];
     if (!f || !t) return;
+    const pathInfo = edgePath(f, t);
+    edgePaths.push({{ edge: e, pathInfo }});
+    if (e.label) {{
+      edgeLabelInfos.push({{
+        mx: pathInfo.mx, my: pathInfo.my,
+        x1: pathInfo.x1, y1: pathInfo.y1,
+        x2: pathInfo.x2, y2: pathInfo.y2,
+        label: e.label, from: e.from, to: e.to
+      }});
+    }}
+  }});
 
-    const {{ d, mx, my }} = edgePath(f, t);
+  // Resolve label positions to avoid overlap
+  const labelPositions = resolveEdgeLabelPositions(edgeLabelInfos, positions);
+  let labelIdx = 0;
+
+  edgePaths.forEach(({{ edge: e, pathInfo }}) => {{
+    const {{ d }} = pathInfo;
     const path = svgEl('path', {{
       class:'edge-path', d, fill:'none', 'data-from': e.from, 'data-to': e.to
     }});
@@ -445,17 +542,18 @@ function render() {{
     edgeEls.push({{ el: path, from: e.from, to: e.to }});
 
     if (e.label) {{
-      const txtLen = e.label.length * 5.5 + 12;
+      const pos = labelPositions[labelIdx++];
+      const txtLen = e.label.length * 5.5 + 14;
       const bg = svgEl('rect', {{
         class:'edge-label-bg',
-        x: mx - txtLen/2, y: my - 8,
+        x: pos.x - txtLen/2, y: pos.y - 8,
         width: txtLen, height: 16, rx: 4
       }});
       svg.appendChild(bg);
       edgeEls.push({{ el: bg, from: e.from, to: e.to, isLabel: true }});
 
       const lbl = svgEl('text', {{
-        class:'edge-label', x: mx, y: my,
+        class:'edge-label', x: pos.x, y: pos.y,
         'data-from': e.from, 'data-to': e.to
       }});
       lbl.textContent = e.label;

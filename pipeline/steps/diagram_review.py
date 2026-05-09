@@ -20,6 +20,11 @@ Evaluate the diagram on these criteria:
 3. CONNECTIONS — Are there missing critical connections between components?
 4. TYPES — Are node types appropriate (e.g., Redis should be "cache", not "server")?
 5. CLARITY — Is the diagram readable and not cluttered?
+6. NO OVERLAP — Critical rule: node labels and edge labels must NOT visually overlap each other.
+   - Groups should not have too many nodes in a single row (max 4 per row recommended).
+   - Edge labels should be short (max 2-3 words) to avoid overlapping adjacent nodes or other labels.
+   - If nodes are too close together given their label lengths, flag it.
+   - Long node labels (>16 chars) risk overlapping — suggest shorter alternatives.
 
 Return your review as a JSON object:
 {

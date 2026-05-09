@@ -199,13 +199,13 @@
 const TYPE_COLORS = {"client": "#6c63ff", "server": "#3dd9c6", "database": "#ff6b6b", "cache": "#ffd43b", "queue": "#74c0fc", "service": "#b197fc", "storage": "#f06595", "external": "#868e96", "monitoring": "#38d9a9"};
 const TYPE_ICONS = {"client": "\ud83d\udc64", "server": "\u2699\ufe0f", "database": "\ud83d\uddc4\ufe0f", "cache": "\u26a1", "queue": "\ud83d\udce8", "service": "\ud83d\udd27", "storage": "\ud83d\udcbe", "external": "\ud83c\udf10", "monitoring": "\ud83d\udcca"};
 
-const DATA = {"title": "URL Shortener System Architecture", "nodes": [{"id": "load_balancer", "label": "Load Balancer", "type": "server", "description": "Distributes incoming requests across multiple application servers and handles SSL termination."}, {"id": "web_servers", "label": "Web Application Servers", "type": "server", "description": "Handle URL shortening requests and redirect operations with horizontal scaling capability."}, {"id": "url_encoding_service", "label": "URL Encoding Service", "type": "service", "description": "Generates unique short codes using Base62 encoding and handles collision detection."}, {"id": "rate_limiter", "label": "Rate Limiting Service", "type": "service", "description": "Prevents abuse and spam by limiting requests per user/IP with sliding window algorithms."}, {"id": "redis_cache", "label": "Redis Cache", "type": "cache", "description": "Caches hot URL mappings to handle 100:1 read-to-write ratio with sub-millisecond lookups."}, {"id": "primary_db", "label": "Primary Database", "type": "database", "description": "Stores URL mappings with sharding strategy to handle billions of records and fast lookups."}, {"id": "analytics_service", "label": "Analytics Service", "type": "service", "description": "Processes click events asynchronously to track metrics without impacting redirect latency."}, {"id": "analytics_db", "label": "Analytics Database", "type": "database", "description": "Time-series database optimized for storing click events and generating usage reports."}, {"id": "message_queue", "label": "Message Queue", "type": "queue", "description": "Buffers click events for asynchronous processing by analytics service."}, {"id": "cdn", "label": "CDN", "type": "external", "description": "Global content delivery network to minimize redirect latency across geographic regions."}, {"id": "cleanup_service", "label": "Cleanup Service", "type": "service", "description": "Background job that removes expired URLs and maintains database performance."}, {"id": "monitoring", "label": "Monitoring & Logging", "type": "monitoring", "description": "Tracks system health, performance metrics, and provides alerting for the distributed system."}], "edges": [{"from": "cdn", "to": "load_balancer", "label": "HTTPS"}, {"from": "load_balancer", "to": "web_servers", "label": "HTTP"}, {"from": "web_servers", "to": "rate_limiter", "label": "Rate Check"}, {"from": "web_servers", "to": "url_encoding_service", "label": "Generate Short URL"}, {"from": "web_servers", "to": "redis_cache", "label": "Cache Lookup"}, {"from": "redis_cache", "to": "primary_db", "label": "Cache Miss"}, {"from": "url_encoding_service", "to": "primary_db", "label": "Store Mapping"}, {"from": "web_servers", "to": "message_queue", "label": "Click Event"}, {"from": "message_queue", "to": "analytics_service", "label": "Event Processing"}, {"from": "analytics_service", "to": "analytics_db", "label": "Store Metrics"}, {"from": "cleanup_service", "to": "primary_db", "label": "Remove Expired"}, {"from": "monitoring", "to": "web_servers", "label": "Health Check"}, {"from": "monitoring", "to": "primary_db", "label": "DB Metrics"}], "groups": [{"label": "Frontend Layer", "nodeIds": ["cdn", "load_balancer"]}, {"label": "Application Layer", "nodeIds": ["web_servers", "url_encoding_service", "rate_limiter"]}, {"label": "Data Layer", "nodeIds": ["redis_cache", "primary_db", "analytics_db"]}, {"label": "Processing Layer", "nodeIds": ["analytics_service", "message_queue", "cleanup_service"]}, {"label": "Operations", "nodeIds": ["monitoring"]}]};
+const DATA = {"title": "URL Shortener System Architecture", "nodes": [{"id": "load_balancer", "label": "Load Balancer", "type": "server", "description": "Distributes incoming requests across multiple application servers and handles SSL termination."}, {"id": "web_servers", "label": "App Servers", "type": "server", "description": "Handle URL shortening requests and redirect operations with horizontal scaling capability."}, {"id": "url_encoding_service", "label": "URL Encoder", "type": "service", "description": "Generates unique short codes using Base62 encoding and handles collision detection."}, {"id": "rate_limiter", "label": "Rate Limiter", "type": "service", "description": "Prevents abuse and spam by limiting requests per user/IP with sliding window algorithms."}, {"id": "redis_cache", "label": "Redis Cache", "type": "cache", "description": "Caches hot URL mappings to handle 100:1 read-to-write ratio with sub-millisecond lookups."}, {"id": "primary_db", "label": "Primary Database", "type": "database", "description": "Stores URL mappings with sharding strategy to handle billions of records and fast lookups."}, {"id": "analytics_service", "label": "Analytics Svc", "type": "service", "description": "Processes click events asynchronously to track metrics without impacting redirect latency."}, {"id": "analytics_db", "label": "Analytics DB", "type": "database", "description": "Time-series database optimized for storing click events and generating usage reports."}, {"id": "message_queue", "label": "Message Queue", "type": "queue", "description": "Buffers click events for asynchronous processing by analytics service."}, {"id": "cdn", "label": "CDN", "type": "external", "description": "Global content delivery network to minimize redirect latency across geographic regions."}, {"id": "cleanup_service", "label": "Cleanup Service", "type": "service", "description": "Background job that removes expired URLs and maintains database performance."}, {"id": "monitoring", "label": "Monitoring", "type": "monitoring", "description": "Tracks system health, performance metrics, and provides alerting for the distributed system."}], "edges": [{"from": "cdn", "to": "load_balancer", "label": "HTTPS"}, {"from": "load_balancer", "to": "web_servers", "label": "HTTP"}, {"from": "web_servers", "to": "rate_limiter", "label": "Rate Check"}, {"from": "web_servers", "to": "url_encoding_service", "label": "Generate Short URL"}, {"from": "web_servers", "to": "redis_cache", "label": "Cache Lookup"}, {"from": "redis_cache", "to": "primary_db", "label": "Cache Miss"}, {"from": "url_encoding_service", "to": "primary_db", "label": "Store Mapping"}, {"from": "web_servers", "to": "message_queue", "label": "Click Event"}, {"from": "message_queue", "to": "analytics_service", "label": "Event Processing"}, {"from": "analytics_service", "to": "analytics_db", "label": "Store Metrics"}, {"from": "cleanup_service", "to": "primary_db", "label": "Remove Expired"}, {"from": "monitoring", "to": "web_servers", "label": "Health Check"}, {"from": "monitoring", "to": "primary_db", "label": "DB Metrics"}], "groups": [{"label": "Frontend Layer", "nodeIds": ["cdn", "load_balancer"]}, {"label": "Application Layer", "nodeIds": ["web_servers", "url_encoding_service", "rate_limiter"]}, {"label": "Data Layer", "nodeIds": ["redis_cache", "primary_db", "analytics_db"]}, {"label": "Processing Layer", "nodeIds": ["analytics_service", "message_queue", "cleanup_service"]}, {"label": "Operations", "nodeIds": ["monitoring"]}]};
 
 const NODE_W = 180, NODE_H = 52;
-const H_GAP = 40, V_GAP = 70;
-const GROUP_PAD_X = 24, GROUP_PAD_Y = 32;
-const GROUP_LABEL_H = 22;
-const CANVAS_PAD = 40;
+const H_GAP = 60, V_GAP = 90;
+const GROUP_PAD_X = 30, GROUP_PAD_Y = 38;
+const GROUP_LABEL_H = 26;
+const CANVAS_PAD = 50;
 
 /* ─── Improved layout engine ─── */
 function layoutNodes(nodes, edges, groups) {
@@ -341,7 +341,84 @@ function edgePath(from, to) {
     d = `M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`;
   }
 
-  return { d, mx, my };
+  return { d, mx, my, x1, y1, x2, y2 };
+}
+
+/* ── Edge label overlap avoidance ── */
+function resolveEdgeLabelPositions(edgeInfos, positions) {
+  // edgeInfos: [{ mx, my, label, from, to, x1, y1, x2, y2 }]
+  // Returns adjusted positions so labels don't overlap nodes or each other
+  const PAD = 6;
+  const LABEL_H = 16;
+  const nodeRects = Object.values(positions);
+
+  function overlapsNode(lx, ly, lw) {
+    for (const r of nodeRects) {
+      if (lx + lw/2 > r.x - PAD && lx - lw/2 < r.x + r.w + PAD &&
+          ly + LABEL_H/2 > r.y - PAD && ly - LABEL_H/2 < r.y + r.h + PAD) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function overlapsOtherLabel(lx, ly, lw, placed) {
+    for (const p of placed) {
+      if (Math.abs(lx - p.x) < (lw + p.w) / 2 + PAD &&
+          Math.abs(ly - p.y) < LABEL_H + PAD) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  const placed = [];
+  const results = [];
+
+  for (const info of edgeInfos) {
+    const { mx, my, x1, y1, x2, y2 } = info;
+    const lw = (info.label || '').length * 5.5 + 14;
+
+    // Generate candidate positions along the edge path and perpendicular to it
+    const dx = x2 - x1, dy = y2 - y1;
+    const len = Math.sqrt(dx*dx + dy*dy) || 1;
+    const ux = dx / len, uy = dy / len;  // unit along edge
+    const px = -uy, py = ux;              // perpendicular unit
+
+    const candidates = [];
+    // Positions at various t values along the edge
+    for (const t of [0.5, 0.35, 0.65, 0.25, 0.75]) {
+      const bx = x1 + dx * t, by = y1 + dy * t;
+      // At each t, try on-edge and offset perpendicular
+      for (const perpDist of [0, -22, 22, -40, 40]) {
+        candidates.push([bx + px * perpDist, by + py * perpDist]);
+      }
+    }
+    // Also try more aggressive perpendicular offsets from midpoint
+    for (const perpDist of [-55, 55, -70, 70]) {
+      candidates.push([mx + px * perpDist, my + py * perpDist]);
+    }
+
+    let bestX = mx, bestY = my;
+    let found = false;
+    for (const [tx, ty] of candidates) {
+      if (!overlapsNode(tx, ty, lw) && !overlapsOtherLabel(tx, ty, lw, placed)) {
+        bestX = tx; bestY = ty;
+        found = true;
+        break;
+      }
+    }
+
+    if (!found) {
+      // Last resort: push way out perpendicular
+      bestX = mx + px * 80;
+      bestY = my + py * 80;
+    }
+
+    placed.push({ x: bestX, y: bestY, w: lw });
+    results.push({ x: bestX, y: bestY });
+  }
+  return results;
 }
 
 function truncLabel(text, maxLen) {
@@ -372,13 +449,32 @@ function render() {
     svg.appendChild(lbl);
   });
 
-  // ── Edges ──
+  // ── Edges (first pass: compute paths and collect label info) ──
   const edgeEls = [];
+  const edgePaths = [];
+  const edgeLabelInfos = [];
+
   DATA.edges.forEach(e => {
     const f = positions[e.from], t = positions[e.to];
     if (!f || !t) return;
+    const pathInfo = edgePath(f, t);
+    edgePaths.push({ edge: e, pathInfo });
+    if (e.label) {
+      edgeLabelInfos.push({
+        mx: pathInfo.mx, my: pathInfo.my,
+        x1: pathInfo.x1, y1: pathInfo.y1,
+        x2: pathInfo.x2, y2: pathInfo.y2,
+        label: e.label, from: e.from, to: e.to
+      });
+    }
+  });
 
-    const { d, mx, my } = edgePath(f, t);
+  // Resolve label positions to avoid overlap
+  const labelPositions = resolveEdgeLabelPositions(edgeLabelInfos, positions);
+  let labelIdx = 0;
+
+  edgePaths.forEach(({ edge: e, pathInfo }) => {
+    const { d } = pathInfo;
     const path = svgEl('path', {
       class:'edge-path', d, fill:'none', 'data-from': e.from, 'data-to': e.to
     });
@@ -386,17 +482,18 @@ function render() {
     edgeEls.push({ el: path, from: e.from, to: e.to });
 
     if (e.label) {
-      const txtLen = e.label.length * 5.5 + 12;
+      const pos = labelPositions[labelIdx++];
+      const txtLen = e.label.length * 5.5 + 14;
       const bg = svgEl('rect', {
         class:'edge-label-bg',
-        x: mx - txtLen/2, y: my - 8,
+        x: pos.x - txtLen/2, y: pos.y - 8,
         width: txtLen, height: 16, rx: 4
       });
       svg.appendChild(bg);
       edgeEls.push({ el: bg, from: e.from, to: e.to, isLabel: true });
 
       const lbl = svgEl('text', {
-        class:'edge-label', x: mx, y: my,
+        class:'edge-label', x: pos.x, y: pos.y,
         'data-from': e.from, 'data-to': e.to
       });
       lbl.textContent = e.label;

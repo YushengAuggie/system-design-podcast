@@ -245,6 +245,41 @@ def _check_4_diagram(ep_dir: Path) -> list[dict]:
                 "message": f"Node '{node.get('id')}' missing description", "fixable": False,
             })
 
+    # Check for potential overlap risks
+    # Rule: node labels >16 chars risk visual clipping/overlap
+    for node in nodes:
+        label = node.get("label", "")
+        if len(label) > 16:
+            issues.append({
+                "check": 4, "severity": "warning", "category": "diagram_label_long",
+                "message": f"Node '{node.get('id')}' label too long ({len(label)} chars): "
+                           f"'{label}' — shorten to ≤16 chars to avoid overlap",
+                "fixable": False,
+            })
+
+    # Rule: edge labels should be short (≤18 chars)
+    for edge in edges:
+        elabel = edge.get("label", "")
+        if len(elabel) > 18:
+            issues.append({
+                "check": 4, "severity": "warning", "category": "diagram_edge_label_long",
+                "message": f"Edge label too long ({len(elabel)} chars): '{elabel}' "
+                           f"({edge.get('from')} → {edge.get('to')}) — shorten to ≤18 chars",
+                "fixable": False,
+            })
+
+    # Rule: groups with >4 nodes per row create density/overlap issues
+    groups = data.get("groups", [])
+    for g in groups:
+        gcount = len(g.get("nodeIds", []))
+        if gcount > 4:
+            issues.append({
+                "check": 4, "severity": "warning", "category": "diagram_group_dense",
+                "message": f"Group '{g.get('label', '?')}' has {gcount} nodes — "
+                           f"max 4 per row recommended to avoid overlap",
+                "fixable": False,
+            })
+
     return issues
 
 
