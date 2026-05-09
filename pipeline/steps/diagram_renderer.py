@@ -1,4 +1,63 @@
-<!DOCTYPE html>
+"""Improved architecture diagram renderer — clean, readable, YouTube-ready.
+
+Generates a standalone HTML file with an SVG-based architecture diagram
+optimized for:
+  - YouTube thumbnails (1280×720 / 1920×1080)
+  - Website embedding (responsive iframe)
+  - Readability at any size
+"""
+
+import json
+from pathlib import Path
+
+# ── Design tokens ──
+CANVAS_W = 1400
+CANVAS_H = 820
+NODE_W = 180
+NODE_H = 52
+NODE_RX = 10
+FONT_NODE = 13
+FONT_EDGE = 10
+FONT_GROUP = 11
+FONT_TITLE = 20
+H_GAP = 40
+V_GAP = 70
+GROUP_PAD_X = 24
+GROUP_PAD_Y = 32
+GROUP_LABEL_H = 22
+CANVAS_PAD = 40
+
+# ── Color palette (dark theme, high contrast) ──
+TYPE_COLORS = {
+    "client":     "#6c63ff",
+    "server":     "#3dd9c6",
+    "database":   "#ff6b6b",
+    "cache":      "#ffd43b",
+    "queue":      "#74c0fc",
+    "service":    "#b197fc",
+    "storage":    "#f06595",
+    "external":   "#868e96",
+    "monitoring": "#38d9a9",
+}
+
+TYPE_ICONS = {
+    "client":     "👤",
+    "server":     "⚙️",
+    "database":   "🗄️",
+    "cache":      "⚡",
+    "queue":      "📨",
+    "service":    "🔧",
+    "storage":    "💾",
+    "external":   "🌐",
+    "monitoring": "📊",
+}
+
+
+def render_diagram_html(diagram_data: dict) -> str:
+    """Render diagram JSON into a polished HTML page with inline SVG."""
+    data_json = json.dumps(diagram_data, ensure_ascii=False)
+    
+    return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -7,9 +66,9 @@
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  *, *::before, *::after {{ margin: 0; padding: 0; box-sizing: border-box; }}
 
-  body {
+  body {{
     background: #0d1117;
     color: #e6edf3;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -18,19 +77,19 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-  }
+  }}
 
-  .diagram-title {
+  .diagram-title {{
     text-align: center;
     padding: 20px 16px 8px;
-    font-size: 20px;
+    font-size: {FONT_TITLE}px;
     font-weight: 700;
     letter-spacing: -0.03em;
     color: #ffffff;
     flex-shrink: 0;
-  }
+  }}
 
-  .canvas-wrap {
+  .canvas-wrap {{
     flex: 1;
     width: 100%;
     overflow: auto;
@@ -38,105 +97,105 @@
     align-items: center;
     justify-content: center;
     padding: 12px 16px;
-  }
+  }}
 
-  svg.diagram-svg {
+  svg.diagram-svg {{
     display: block;
     max-width: 100%;
     height: auto;
-  }
+  }}
 
   /* ── Nodes ── */
-  .node-group { cursor: pointer; }
+  .node-group {{ cursor: pointer; }}
 
-  .node-rect {
-    rx: 10; ry: 10;
+  .node-rect {{
+    rx: {NODE_RX}; ry: {NODE_RX};
     stroke-width: 1.8;
     transition: filter 0.2s, stroke-width 0.2s;
-  }
+  }}
 
   .node-group:hover .node-rect,
-  .node-group.highlighted .node-rect {
+  .node-group.highlighted .node-rect {{
     stroke-width: 2.5;
     filter: drop-shadow(0 0 12px var(--node-color));
-  }
+  }}
 
-  .node-group.dimmed { opacity: 0.1; transition: opacity 0.25s; }
-  .node-group:not(.dimmed) { transition: opacity 0.25s; }
+  .node-group.dimmed {{ opacity: 0.1; transition: opacity 0.25s; }}
+  .node-group:not(.dimmed) {{ transition: opacity 0.25s; }}
 
-  .node-icon {
+  .node-icon {{
     font-size: 15px;
     text-anchor: middle;
     dominant-baseline: central;
     pointer-events: none;
-  }
+  }}
 
-  .node-label {
+  .node-label {{
     fill: #ffffff;
-    font-size: 13px;
+    font-size: {FONT_NODE}px;
     font-weight: 600;
     text-anchor: middle;
     dominant-baseline: central;
     pointer-events: none;
     letter-spacing: -0.01em;
-  }
+  }}
 
   /* ── Edges ── */
-  .edge-path {
+  .edge-path {{
     stroke: #3d444d;
     stroke-width: 1.5;
     fill: none;
     transition: stroke 0.2s, stroke-width 0.2s;
     marker-end: url(#arrowhead);
-  }
+  }}
 
-  .edge-path.highlighted {
+  .edge-path.highlighted {{
     stroke: #6c63ff;
     stroke-width: 2.5;
     stroke-dasharray: 8 4;
     animation: dash-flow 0.6s linear infinite;
     marker-end: url(#arrowhead-hl);
-  }
+  }}
 
-  .edge-path.dimmed { opacity: 0.05; transition: opacity 0.25s; }
+  .edge-path.dimmed {{ opacity: 0.05; transition: opacity 0.25s; }}
 
-  @keyframes dash-flow { to { stroke-dashoffset: -12; } }
+  @keyframes dash-flow {{ to {{ stroke-dashoffset: -12; }} }}
 
-  .edge-label {
+  .edge-label {{
     fill: #8b949e;
-    font-size: 10px;
+    font-size: {FONT_EDGE}px;
     font-weight: 500;
     text-anchor: middle;
     dominant-baseline: central;
     pointer-events: none;
-  }
-  .edge-label.highlighted { fill: #c9d1d9; }
-  .edge-label.dimmed { opacity: 0.05; }
+  }}
+  .edge-label.highlighted {{ fill: #c9d1d9; }}
+  .edge-label.dimmed {{ opacity: 0.05; }}
 
-  .edge-label-bg {
+  .edge-label-bg {{
     fill: #0d1117;
     opacity: 0.9;
-  }
-  .edge-label-bg.dimmed { opacity: 0.05; }
+  }}
+  .edge-label-bg.dimmed {{ opacity: 0.05; }}
 
   /* ── Groups ── */
-  .group-rect {
+  .group-rect {{
     fill: rgba(255,255,255,0.025);
     stroke: rgba(255,255,255,0.08);
     stroke-width: 1;
     stroke-dasharray: 6 4;
     rx: 12; ry: 12;
-  }
-  .group-label {
+  }}
+  .group-label {{
     fill: rgba(255,255,255,0.4);
-    font-size: 11px;
+    font-size: {FONT_GROUP}px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.12em;
-  }
+  }}
 
   /* ── Tooltip ── */
-  .tooltip {
+  .tooltip {{
     position: fixed;
     background: #161b22;
     border: 1px solid rgba(108,99,255,0.35);
@@ -149,27 +208,27 @@
     transition: opacity 0.2s, transform 0.2s;
     z-index: 100;
     box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-  }
-  .tooltip.visible { opacity: 1; transform: translateY(0); }
-  .tooltip-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 4px; color: #fff; }
-  .tooltip-type {
+  }}
+  .tooltip.visible {{ opacity: 1; transform: translateY(0); }}
+  .tooltip-title {{ font-weight: 700; font-size: 0.9rem; margin-bottom: 4px; color: #fff; }}
+  .tooltip-type {{
     display: inline-block; font-size: 0.65rem; font-weight: 600;
     text-transform: uppercase; letter-spacing: 0.06em;
     padding: 2px 8px; border-radius: 4px; margin-bottom: 8px;
-  }
-  .tooltip-desc { font-size: 0.8rem; line-height: 1.5; color: #8b949e; }
+  }}
+  .tooltip-desc {{ font-size: 0.8rem; line-height: 1.5; color: #8b949e; }}
 
   /* ── Legend ── */
-  .legend {
+  .legend {{
     display: flex; flex-wrap: wrap; justify-content: center;
     gap: 14px; padding: 8px 16px 14px; flex-shrink: 0;
-  }
-  .legend-item {
+  }}
+  .legend-item {{
     display: flex; align-items: center; gap: 6px;
     font-size: 0.7rem; color: #8b949e; text-transform: capitalize;
     font-weight: 500;
-  }
-  .legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+  }}
+  .legend-dot {{ width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }}
 </style>
 </head>
 <body>
@@ -196,58 +255,58 @@
 </div>
 
 <script>
-const TYPE_COLORS = {"client": "#6c63ff", "server": "#3dd9c6", "database": "#ff6b6b", "cache": "#ffd43b", "queue": "#74c0fc", "service": "#b197fc", "storage": "#f06595", "external": "#868e96", "monitoring": "#38d9a9"};
-const TYPE_ICONS = {"client": "\ud83d\udc64", "server": "\u2699\ufe0f", "database": "\ud83d\uddc4\ufe0f", "cache": "\u26a1", "queue": "\ud83d\udce8", "service": "\ud83d\udd27", "storage": "\ud83d\udcbe", "external": "\ud83c\udf10", "monitoring": "\ud83d\udcca"};
+const TYPE_COLORS = {json.dumps(TYPE_COLORS)};
+const TYPE_ICONS = {json.dumps(TYPE_ICONS)};
 
-const DATA = {"title": "URL Shortener System Architecture", "nodes": [{"id": "load_balancer", "label": "Load Balancer", "type": "server", "description": "Distributes incoming requests across multiple application servers and handles SSL termination."}, {"id": "web_servers", "label": "Web Application Servers", "type": "server", "description": "Handle URL shortening requests and redirect operations with horizontal scaling capability."}, {"id": "url_encoding_service", "label": "URL Encoding Service", "type": "service", "description": "Generates unique short codes using Base62 encoding and handles collision detection."}, {"id": "rate_limiter", "label": "Rate Limiting Service", "type": "service", "description": "Prevents abuse and spam by limiting requests per user/IP with sliding window algorithms."}, {"id": "redis_cache", "label": "Redis Cache", "type": "cache", "description": "Caches hot URL mappings to handle 100:1 read-to-write ratio with sub-millisecond lookups."}, {"id": "primary_db", "label": "Primary Database", "type": "database", "description": "Stores URL mappings with sharding strategy to handle billions of records and fast lookups."}, {"id": "analytics_service", "label": "Analytics Service", "type": "service", "description": "Processes click events asynchronously to track metrics without impacting redirect latency."}, {"id": "analytics_db", "label": "Analytics Database", "type": "database", "description": "Time-series database optimized for storing click events and generating usage reports."}, {"id": "message_queue", "label": "Message Queue", "type": "queue", "description": "Buffers click events for asynchronous processing by analytics service."}, {"id": "cdn", "label": "CDN", "type": "external", "description": "Global content delivery network to minimize redirect latency across geographic regions."}, {"id": "cleanup_service", "label": "Cleanup Service", "type": "service", "description": "Background job that removes expired URLs and maintains database performance."}, {"id": "monitoring", "label": "Monitoring & Logging", "type": "monitoring", "description": "Tracks system health, performance metrics, and provides alerting for the distributed system."}], "edges": [{"from": "cdn", "to": "load_balancer", "label": "HTTPS"}, {"from": "load_balancer", "to": "web_servers", "label": "HTTP"}, {"from": "web_servers", "to": "rate_limiter", "label": "Rate Check"}, {"from": "web_servers", "to": "url_encoding_service", "label": "Generate Short URL"}, {"from": "web_servers", "to": "redis_cache", "label": "Cache Lookup"}, {"from": "redis_cache", "to": "primary_db", "label": "Cache Miss"}, {"from": "url_encoding_service", "to": "primary_db", "label": "Store Mapping"}, {"from": "web_servers", "to": "message_queue", "label": "Click Event"}, {"from": "message_queue", "to": "analytics_service", "label": "Event Processing"}, {"from": "analytics_service", "to": "analytics_db", "label": "Store Metrics"}, {"from": "cleanup_service", "to": "primary_db", "label": "Remove Expired"}, {"from": "monitoring", "to": "web_servers", "label": "Health Check"}, {"from": "monitoring", "to": "primary_db", "label": "DB Metrics"}], "groups": [{"label": "Frontend Layer", "nodeIds": ["cdn", "load_balancer"]}, {"label": "Application Layer", "nodeIds": ["web_servers", "url_encoding_service", "rate_limiter"]}, {"label": "Data Layer", "nodeIds": ["redis_cache", "primary_db", "analytics_db"]}, {"label": "Processing Layer", "nodeIds": ["analytics_service", "message_queue", "cleanup_service"]}, {"label": "Operations", "nodeIds": ["monitoring"]}]};
+const DATA = {data_json};
 
-const NODE_W = 180, NODE_H = 52;
-const H_GAP = 40, V_GAP = 70;
-const GROUP_PAD_X = 24, GROUP_PAD_Y = 32;
-const GROUP_LABEL_H = 22;
-const CANVAS_PAD = 40;
+const NODE_W = {NODE_W}, NODE_H = {NODE_H};
+const H_GAP = {H_GAP}, V_GAP = {V_GAP};
+const GROUP_PAD_X = {GROUP_PAD_X}, GROUP_PAD_Y = {GROUP_PAD_Y};
+const GROUP_LABEL_H = {GROUP_LABEL_H};
+const CANVAS_PAD = {CANVAS_PAD};
 
 /* ─── Improved layout engine ─── */
-function layoutNodes(nodes, edges, groups) {
-  const positions = {};
-  const nodeMap = {};
-  nodes.forEach(n => { nodeMap[n.id] = n; });
+function layoutNodes(nodes, edges, groups) {{
+  const positions = {{}};
+  const nodeMap = {{}};
+  nodes.forEach(n => {{ nodeMap[n.id] = n; }});
 
-  if (!groups || groups.length === 0) {
+  if (!groups || groups.length === 0) {{
     // Fallback: simple grid
     const cols = Math.ceil(Math.sqrt(nodes.length));
-    nodes.forEach((n, i) => {
+    nodes.forEach((n, i) => {{
       const row = Math.floor(i / cols);
       const col = i % cols;
-      positions[n.id] = {
+      positions[n.id] = {{
         x: CANVAS_PAD + col * (NODE_W + H_GAP),
         y: CANVAS_PAD + row * (NODE_H + V_GAP),
         w: NODE_W, h: NODE_H
-      };
-    });
+      }};
+    }});
     const maxCol = Math.min(nodes.length, cols);
     const maxRow = Math.ceil(nodes.length / cols);
-    return {
+    return {{
       positions,
       canvasW: maxCol * (NODE_W + H_GAP) - H_GAP + CANVAS_PAD * 2,
       canvasH: maxRow * (NODE_H + V_GAP) - V_GAP + CANVAS_PAD * 2
-    };
-  }
+    }};
+  }}
 
   // Smart layout: place groups as rows, center-aligned
   // Calculate max row width to determine canvas width
   let maxRowW = 0;
-  groups.forEach(g => {
+  groups.forEach(g => {{
     const count = (g.nodeIds || []).length;
     const rowW = count * NODE_W + (count - 1) * H_GAP + GROUP_PAD_X * 2;
     if (rowW > maxRowW) maxRowW = rowW;
-  });
+  }});
 
-  const canvasW = Math.max(maxRowW + CANVAS_PAD * 2, 1400);
+  const canvasW = Math.max(maxRowW + CANVAS_PAD * 2, {CANVAS_W});
   let currentY = CANVAS_PAD;
   const groupBounds = [];
 
-  groups.forEach((g, gi) => {
+  groups.forEach((g, gi) => {{
     const gNodes = (g.nodeIds || []).map(id => nodeMap[id]).filter(Boolean);
     if (gNodes.length === 0) return;
 
@@ -256,100 +315,100 @@ function layoutNodes(nodes, edges, groups) {
     const rowW = gNodes.length * NODE_W + (gNodes.length - 1) * H_GAP;
     const startX = (canvasW - rowW) / 2;
 
-    gNodes.forEach((n, i) => {
-      positions[n.id] = {
+    gNodes.forEach((n, i) => {{
+      positions[n.id] = {{
         x: startX + i * (NODE_W + H_GAP),
         y: nodesY,
         w: NODE_W, h: NODE_H
-      };
-    });
+      }};
+    }});
 
     const groupLeft = startX - GROUP_PAD_X;
     const groupRight = startX + rowW + GROUP_PAD_X;
     const groupBottom = nodesY + NODE_H + GROUP_PAD_Y;
 
-    groupBounds.push({
+    groupBounds.push({{
       label: g.label,
       x: groupLeft,
       y: rowTop,
       w: groupRight - groupLeft,
       h: groupBottom - rowTop
-    });
+    }});
 
     currentY = groupBottom + V_GAP;
-  });
+  }});
 
   // Ungrouped nodes
   const grouped = new Set();
   groups.forEach(g => (g.nodeIds || []).forEach(id => grouped.add(id)));
   const ungrouped = nodes.filter(n => !grouped.has(n.id));
-  if (ungrouped.length > 0) {
+  if (ungrouped.length > 0) {{
     const rowW = ungrouped.length * NODE_W + (ungrouped.length - 1) * H_GAP;
     const startX = (canvasW - rowW) / 2;
-    ungrouped.forEach((n, i) => {
-      positions[n.id] = {
+    ungrouped.forEach((n, i) => {{
+      positions[n.id] = {{
         x: startX + i * (NODE_W + H_GAP),
         y: currentY,
         w: NODE_W, h: NODE_H
-      };
-    });
+      }};
+    }});
     currentY += NODE_H + V_GAP;
-  }
+  }}
 
-  const canvasH = Math.max(currentY - V_GAP + CANVAS_PAD, 820);
-  return { positions, canvasW, canvasH, groupBounds };
-}
+  const canvasH = Math.max(currentY - V_GAP + CANVAS_PAD, {CANVAS_H});
+  return {{ positions, canvasW, canvasH, groupBounds }};
+}}
 
 /* ── SVG helpers ── */
 const svgNS = 'http://www.w3.org/2000/svg';
-function svgEl(tag, attrs) {
+function svgEl(tag, attrs) {{
   const el = document.createElementNS(svgNS, tag);
   for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
   return el;
-}
+}}
 
 /* ── Smooth edge path ── */
-function edgePath(from, to) {
+function edgePath(from, to) {{
   const cx1 = from.x + from.w / 2, cy1 = from.y + from.h / 2;
   const cx2 = to.x + to.w / 2, cy2 = to.y + to.h / 2;
 
   let x1, y1, x2, y2;
 
-  if (Math.abs(cy2 - cy1) > Math.abs(cx2 - cx1) * 0.25) {
-    if (cy2 > cy1) {
+  if (Math.abs(cy2 - cy1) > Math.abs(cx2 - cx1) * 0.25) {{
+    if (cy2 > cy1) {{
       x1 = cx1; y1 = from.y + from.h;
       x2 = cx2; y2 = to.y;
-    } else {
+    }} else {{
       x1 = cx1; y1 = from.y;
       x2 = cx2; y2 = to.y + to.h;
-    }
-  } else {
-    if (cx2 > cx1) {
+    }}
+  }} else {{
+    if (cx2 > cx1) {{
       x1 = from.x + from.w; y1 = cy1;
       x2 = to.x; y2 = cy2;
-    } else {
+    }} else {{
       x1 = from.x; y1 = cy1;
       x2 = to.x + to.w; y2 = cy2;
-    }
-  }
+    }}
+  }}
 
   const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
   let d;
-  if (Math.abs(y2 - y1) > Math.abs(x2 - x1) * 0.4) {
-    d = `M${x1},${y1} C${x1},${my} ${x2},${my} ${x2},${y2}`;
-  } else {
-    d = `M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`;
-  }
+  if (Math.abs(y2 - y1) > Math.abs(x2 - x1) * 0.4) {{
+    d = `M${{x1}},${{y1}} C${{x1}},${{my}} ${{x2}},${{my}} ${{x2}},${{y2}}`;
+  }} else {{
+    d = `M${{x1}},${{y1}} C${{mx}},${{y1}} ${{mx}},${{y2}} ${{x2}},${{y2}}`;
+  }}
 
-  return { d, mx, my };
-}
+  return {{ d, mx, my }};
+}}
 
-function truncLabel(text, maxLen) {
+function truncLabel(text, maxLen) {{
   return text.length > maxLen ? text.slice(0, maxLen - 1) + '…' : text;
-}
+}}
 
 /* ── Render ── */
-function render() {
+function render() {{
   const svg = document.getElementById('svgCanvas');
   const title = document.getElementById('diagramTitle');
   const legend = document.getElementById('legend');
@@ -357,126 +416,126 @@ function render() {
 
   title.textContent = DATA.title || 'Architecture Diagram';
 
-  const { positions, canvasW, canvasH, groupBounds } = layoutNodes(DATA.nodes, DATA.edges, DATA.groups || []);
-  svg.setAttribute('viewBox', `0 0 ${canvasW} ${canvasH}`);
+  const {{ positions, canvasW, canvasH, groupBounds }} = layoutNodes(DATA.nodes, DATA.edges, DATA.groups || []);
+  svg.setAttribute('viewBox', `0 0 ${{canvasW}} ${{canvasH}}`);
   svg.style.width = canvasW + 'px';
   svg.style.maxWidth = '100%';
 
   // ── Groups ──
-  (groupBounds || []).forEach(gb => {
-    svg.appendChild(svgEl('rect', {
+  (groupBounds || []).forEach(gb => {{
+    svg.appendChild(svgEl('rect', {{
       class:'group-rect', x: gb.x, y: gb.y, width: gb.w, height: gb.h
-    }));
-    const lbl = svgEl('text', { class:'group-label', x: gb.x + 14, y: gb.y + 16 });
+    }}));
+    const lbl = svgEl('text', {{ class:'group-label', x: gb.x + 14, y: gb.y + 16 }});
     lbl.textContent = gb.label;
     svg.appendChild(lbl);
-  });
+  }});
 
   // ── Edges ──
   const edgeEls = [];
-  DATA.edges.forEach(e => {
+  DATA.edges.forEach(e => {{
     const f = positions[e.from], t = positions[e.to];
     if (!f || !t) return;
 
-    const { d, mx, my } = edgePath(f, t);
-    const path = svgEl('path', {
+    const {{ d, mx, my }} = edgePath(f, t);
+    const path = svgEl('path', {{
       class:'edge-path', d, fill:'none', 'data-from': e.from, 'data-to': e.to
-    });
+    }});
     svg.appendChild(path);
-    edgeEls.push({ el: path, from: e.from, to: e.to });
+    edgeEls.push({{ el: path, from: e.from, to: e.to }});
 
-    if (e.label) {
+    if (e.label) {{
       const txtLen = e.label.length * 5.5 + 12;
-      const bg = svgEl('rect', {
+      const bg = svgEl('rect', {{
         class:'edge-label-bg',
         x: mx - txtLen/2, y: my - 8,
         width: txtLen, height: 16, rx: 4
-      });
+      }});
       svg.appendChild(bg);
-      edgeEls.push({ el: bg, from: e.from, to: e.to, isLabel: true });
+      edgeEls.push({{ el: bg, from: e.from, to: e.to, isLabel: true }});
 
-      const lbl = svgEl('text', {
+      const lbl = svgEl('text', {{
         class:'edge-label', x: mx, y: my,
         'data-from': e.from, 'data-to': e.to
-      });
+      }});
       lbl.textContent = e.label;
       svg.appendChild(lbl);
-      edgeEls.push({ el: lbl, from: e.from, to: e.to, isLabel: true });
-    }
-  });
+      edgeEls.push({{ el: lbl, from: e.from, to: e.to, isLabel: true }});
+    }}
+  }});
 
   // ── Nodes ──
-  const nodeEls = {};
-  DATA.nodes.forEach(n => {
+  const nodeEls = {{}};
+  DATA.nodes.forEach(n => {{
     const pos = positions[n.id];
     if (!pos) return;
     const color = TYPE_COLORS[n.type] || '#888';
     const icon = TYPE_ICONS[n.type] || '●';
 
-    const g = svgEl('g', {
-      class:'node-group', 'data-id': n.id, style: `--node-color:${color}`
-    });
+    const g = svgEl('g', {{
+      class:'node-group', 'data-id': n.id, style: `--node-color:${{color}}`
+    }});
 
     // Node background with subtle gradient effect
-    g.appendChild(svgEl('rect', {
+    g.appendChild(svgEl('rect', {{
       class:'node-rect', x: pos.x, y: pos.y,
       width: pos.w, height: pos.h,
       fill: color + '18', stroke: color
-    }));
+    }}));
 
-    const iconEl = svgEl('text', {
+    const iconEl = svgEl('text', {{
       class:'node-icon', x: pos.x + 18, y: pos.y + pos.h / 2
-    });
+    }});
     iconEl.textContent = icon;
     g.appendChild(iconEl);
 
-    const labelEl = svgEl('text', {
+    const labelEl = svgEl('text', {{
       class:'node-label', x: pos.x + pos.w / 2 + 8, y: pos.y + pos.h / 2
-    });
+    }});
     labelEl.textContent = truncLabel(n.label, 20);
     g.appendChild(labelEl);
 
     svg.appendChild(g);
-    nodeEls[n.id] = { el: g, data: n };
-  });
+    nodeEls[n.id] = {{ el: g, data: n }};
+  }});
 
   // ── Interactions ──
-  const adj = {};
+  const adj = {{}};
   DATA.nodes.forEach(n => adj[n.id] = new Set());
-  DATA.edges.forEach(e => {
+  DATA.edges.forEach(e => {{
     if (adj[e.from]) adj[e.from].add(e.to);
     if (adj[e.to]) adj[e.to].add(e.from);
-  });
+  }});
 
-  function highlight(nodeId) {
+  function highlight(nodeId) {{
     const nbrs = adj[nodeId] || new Set();
-    Object.keys(nodeEls).forEach(id => {
+    Object.keys(nodeEls).forEach(id => {{
       const el = nodeEls[id].el;
-      if (id === nodeId || nbrs.has(id)) {
+      if (id === nodeId || nbrs.has(id)) {{
         el.classList.add('highlighted'); el.classList.remove('dimmed');
-      } else {
+      }} else {{
         el.classList.remove('highlighted'); el.classList.add('dimmed');
-      }
-    });
-    edgeEls.forEach(ee => {
-      if (ee.from === nodeId || ee.to === nodeId) {
+      }}
+    }});
+    edgeEls.forEach(ee => {{
+      if (ee.from === nodeId || ee.to === nodeId) {{
         ee.el.classList.add('highlighted'); ee.el.classList.remove('dimmed');
-      } else {
+      }} else {{
         ee.el.classList.remove('highlighted'); ee.el.classList.add('dimmed');
-      }
-    });
-  }
+      }}
+    }});
+  }}
 
-  function clearHL() {
+  function clearHL() {{
     Object.values(nodeEls).forEach(ne => ne.el.classList.remove('highlighted','dimmed'));
     edgeEls.forEach(ee => ee.el.classList.remove('highlighted','dimmed'));
-  }
+  }}
 
-  Object.keys(nodeEls).forEach(id => {
+  Object.keys(nodeEls).forEach(id => {{
     const g = nodeEls[id].el;
     g.addEventListener('mouseenter', () => highlight(id));
     g.addEventListener('mouseleave', () => clearHL());
-    g.addEventListener('click', evt => {
+    g.addEventListener('click', evt => {{
       evt.stopPropagation();
       const n = nodeEls[id].data;
       const c = TYPE_COLORS[n.type] || '#888';
@@ -487,24 +546,24 @@ function render() {
       tooltip.style.left = Math.min(evt.clientX+12, window.innerWidth-340)+'px';
       tooltip.style.top = Math.min(evt.clientY+12, window.innerHeight-160)+'px';
       tooltip.classList.add('visible');
-    });
-  });
+    }});
+  }});
 
   document.addEventListener('click', () => tooltip.classList.remove('visible'));
 
   // ── Legend ──
   const usedTypes = [...new Set(DATA.nodes.map(n => n.type))];
-  usedTypes.forEach(type => {
+  usedTypes.forEach(type => {{
     const c = TYPE_COLORS[type] || '#888';
     const item = document.createElement('div');
     item.className = 'legend-item';
-    item.innerHTML = `<span class="legend-dot" style="background:${c}"></span>${type}`;
+    item.innerHTML = `<span class="legend-dot" style="background:${{c}}"></span>${{type}}`;
     legend.appendChild(item);
-  });
-}
+  }});
+}}
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', render);
 else render();
 </script>
 </body>
-</html>
+</html>"""

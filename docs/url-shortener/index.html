@@ -9,7 +9,41 @@
   <meta property="og:description" content="URL shorteners like bit.ly and tinyurl.com appear simple but involve complex system design challenges including distributed ID generation, caching strategies, and handling massive read/write ratios at scale." />
   <meta property="og:type" content="article" />
   <meta property="og:url" content="https://yushengauggie.github.io/byte-by-design/url-shortener" />
+  <meta property="og:image" content="https://yushengauggie.github.io/byte-by-design/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="URL Shortener — Byte by Design S1E1" />
+  <meta name="twitter:description" content="URL shorteners look simple but involve distributed ID generation, caching, and 100:1 read/write ratios. Two engineers break it down in ~10 min." />
+  <meta name="twitter:image" content="https://yushengauggie.github.io/byte-by-design/og-image.png" />
+  <link rel="canonical" href="https://yushengauggie.github.io/byte-by-design/url-shortener/" />
   <link rel="stylesheet" href="../style.css" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "PodcastEpisode",
+    "name": "URL Shortener",
+    "url": "https://yushengauggie.github.io/byte-by-design/url-shortener/",
+    "description": "URL shorteners like bit.ly and tinyurl.com appear simple but involve complex system design challenges.",
+    "episodeNumber": 1,
+    "partOfSeries": {
+      "@type": "PodcastSeries",
+      "name": "Byte by Design",
+      "url": "https://yushengauggie.github.io/byte-by-design/"
+    },
+    "audio": {
+      "@type": "AudioObject",
+      "contentUrl": "https://yushengauggie.github.io/byte-by-design/url-shortener/episode.mp3",
+      "encodingFormat": "audio/mpeg",
+      "duration": "PT10M"
+    },
+    "author": {
+      "@type": "Person",
+      "name": "Yusheng Ding",
+      "url": "https://yushengauggie.github.io"
+    }
+  }
+  </script>
 </head>
 <body>
 
@@ -24,7 +58,12 @@
       <span class="badge badge-episode">Episode 1</span>
     </div>
     <h1>URL Shortener</h1>
+    <div class="episode-hero-badges">
+      <span class="badge badge-duration">🎧 ~10 min</span>
+      <span class="badge badge-topic">Interview Prep</span>
+    </div>
     <p class="summary">URL shorteners like bit.ly and tinyurl.com appear simple but involve complex system design challenges including distributed ID generation, caching strategies, and handling massive read/write ratios at scale.</p>
+    <blockquote class="episode-pullquote">&ldquo;Database death by TikTok should be a monitoring alert category.&rdquo;</blockquote>
   </div>
 </header>
 
@@ -55,27 +94,31 @@
         </audio>
         <div class="listen-on">
           <a href="https://www.youtube.com/watch?v=Tcn8dmgeQ8A" class="listen-btn" target="_blank" rel="noopener">▶ YouTube</a>
+          <a href="../feed.xml" class="listen-btn" target="_blank" rel="noopener">📡 RSS Feed</a>
         </div>
       </section>
 
       <!-- Architecture Diagram -->
       <section id="diagram" class="episode-diagram">
-        <h2>🏗 Architecture Diagram</h2>
-<iframe src="diagram.html" style="width:100%; height:500px; border:none; border-radius:8px;" loading="lazy" title="Interactive Architecture Diagram"></iframe>
+        <div class="diagram-header">
+          <h2>🏗 Architecture Diagram</h2>
+          <a href="diagram.html" target="_blank" rel="noopener" class="diagram-fullscreen-link">↗︎ Open full screen</a>
+        </div>
+<iframe src="diagram.html" style="width:100%; height:700px; border:none; border-radius:8px;" loading="lazy" title="Interactive Architecture Diagram"></iframe>
       </section>
 
       <!-- Transcript -->
       <section id="transcript" class="episode-transcript">
         <button
           class="transcript-toggle"
-          aria-expanded="false"
+          aria-expanded="true"
           aria-controls="transcript-body"
           onclick="this.setAttribute('aria-expanded', this.getAttribute('aria-expanded') === 'true' ? 'false' : 'true'); document.getElementById('transcript-body').classList.toggle('open');"
         >
           <span>📝 Full Script / Transcript</span>
           <span class="chevron">▼</span>
         </button>
-        <div id="transcript-body" class="transcript-content">
+        <div id="transcript-body" class="transcript-content open">
 <h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#a78bfa; margin:20px 0 10px;">Metadata</h3>
 <hr style="border:none; border-top:1px solid rgba(255,255,255,0.1); margin:16px 0;" />
 <h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#a78bfa; margin:20px 0 10px;">Segment 1: The Problem (~2 min)</h3>
@@ -180,9 +223,35 @@
         <p style="font-size:0.85rem; color:var(--text-light);">
           <a href="../index.html">← Back to all episodes</a>
         </p>
+        <div class="next-episode-teaser">
+          <span class="next-label">Next →</span>
+          <span class="next-title">Chat Systems</span>
+          <span class="next-coming">Coming soon</span>
+        </div>
+      </div>
+
+      <div class="sidebar-card share-card">
+        <h3>Share This Episode</h3>
+        <div class="share-buttons">
+          <a href="https://twitter.com/intent/tweet?text=Just+found+%22Byte+by+Design%22+%E2%80%94+a+system+design+podcast+breaking+down+URL+Shortener+architecture+in+10+min.+Great+interview+prep!&url=https%3A%2F%2Fyushengauggie.github.io%2Fbyte-by-design%2Furl-shortener%2F" target="_blank" rel="noopener" class="share-btn">𝕏 Twitter</a>
+          <a href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fyushengauggie.github.io%2Fbyte-by-design%2Furl-shortener%2F" target="_blank" rel="noopener" class="share-btn">in LinkedIn</a>
+          <button class="share-btn share-copy" onclick="navigator.clipboard.writeText(window.location.href).then(function(){var b=this;b.textContent='✓ Copied!';setTimeout(function(){b.textContent='🔗 Copy Link';},2000);}).bind(this)">🔗 Copy Link</button>
+        </div>
       </div>
 
     </aside>
+  </div>
+</div>
+
+<!-- ── Next Episode Banner ── -->
+<div class="container" style="margin-bottom:40px;">
+  <div class="next-episode-card">
+    <div>
+      <div class="next-ep-label">Up Next</div>
+      <div class="next-ep-title">Chat Systems <span class="badge badge-coming">Coming Soon</span></div>
+      <div class="next-ep-desc">WebSockets, message queues, presence detection — why &ldquo;just use WebSockets&rdquo; is never the full answer.</div>
+    </div>
+    <a href="../index.html" class="listen-btn" style="white-space:nowrap;">All Episodes →</a>
   </div>
 </div>
 
