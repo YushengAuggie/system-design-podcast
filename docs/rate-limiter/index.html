@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rate Limiter — System Design Podcast S1E2</title>
+  <meta name="description" content="Rate limiters are critical components that control the flow of requests to protect systems from overload and ensure fair resource allocation. This episode explores design patterns, algorithms, and real-world implementations used by major tech companies." />
+  <meta property="og:title" content="Rate Limiter — System Design Podcast" />
+  <meta property="og:description" content="Rate limiters are critical components that control the flow of requests to protect systems from overload and ensure fair resource allocation. This episode explores design patterns, algorithms, and real-world implementations used by major tech companies." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://yushengauggie.github.io/byte-by-design/rate-limiter" />
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+
+<!-- ── Episode Hero ── -->
+<header class="episode-hero">
+  <div class="container">
+    <p class="breadcrumb">
+      <a href="../index.html">System Design Podcast</a> › <span>S1E2</span>
+    </p>
+    <div class="episode-meta">
+      <span class="badge badge-season">Season 1</span>
+      <span class="badge badge-episode">Episode 2</span>
+    </div>
+    <h1>Rate Limiter</h1>
+    <p class="summary">Rate limiters are critical components that control the flow of requests to protect systems from overload and ensure fair resource allocation. This episode explores design patterns, algorithms, and real-world implementations used by major tech companies.</p>
+  </div>
+</header>
+
+<!-- ── Sticky Nav ── -->
+<nav class="site-nav" aria-label="Episode sections">
+  <div class="container">
+    <a href="../index.html">← All Episodes</a>
+    <a href="#player">Listen</a>
+    <a href="#diagram">Diagram</a>
+    <a href="#transcript">Transcript</a>
+    <a href="#references">References</a>
+  </div>
+</nav>
+
+<!-- ── Main Content ── -->
+<div class="container">
+  <div class="episode-layout">
+
+    <!-- Main column -->
+    <main class="episode-main">
+
+      <!-- Audio Player -->
+      <section id="player" class="episode-player">
+        <h2>🎧 Listen</h2>
+        <audio controls preload="metadata">
+          <source src="https://github.com/YushengAuggie/byte-by-design/releases/download/ep-1-2/episode.mp3" type="audio/mpeg" />
+          Your browser does not support the audio element.
+        </audio>
+        <div class="listen-on">
+          <span style="font-size:0.8rem; color:var(--text-light);">More platforms coming soon</span>
+        </div>
+      </section>
+
+      <!-- Architecture Diagram -->
+      <section id="diagram" class="episode-diagram">
+        <h2>🏗 Architecture Diagram</h2>
+<iframe src="diagram.html" style="width:100%; height:500px; border:none; border-radius:8px;" loading="lazy" title="Interactive Architecture Diagram"></iframe>
+      </section>
+
+      <!-- Transcript -->
+      <section id="transcript" class="episode-transcript">
+        <button
+          class="transcript-toggle"
+          aria-expanded="false"
+          aria-controls="transcript-body"
+          onclick="this.setAttribute('aria-expanded', this.getAttribute('aria-expanded') === 'true' ? 'false' : 'true'); document.getElementById('transcript-body').classList.toggle('open');"
+        >
+          <span>📝 Full Script / Transcript</span>
+          <span class="chevron">▼</span>
+        </button>
+        <div id="transcript-body" class="transcript-content">
+<h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#a78bfa; margin:20px 0 10px;">Metadata</h3>
+<hr style="border:none; border-top:1px solid rgba(255,255,255,0.1); margin:16px 0;" />
+<h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#a78bfa; margin:20px 0 10px;">Segment 1: The Problem (~2 min)</h3>
+<p class="host-line host-a"><span class="host-label">Alex</span> Welcome back to Byte by Design! I&#x27;m here with my co-host who definitely tried to DOS our coffee machine this morning...</p>
+<p class="host-line host-b"><span class="host-label">Blake</span> Hey! I just wanted my caffeine fix. But speaking of DOS attacks, today we&#x27;re talking rate limiters — basically the bouncer at the club of your API.</p>
+<p class="host-line host-a"><span class="host-label">Alex</span> *laughs* That&#x27;s... actually not a terrible analogy. You know what&#x27;s wild? Every time you hit &quot;like&quot; on Instagram or send a tweet, there&#x27;s this invisible system deciding whether you&#x27;re being too spammy.</p>
+<p class="host-line host-b"><span class="host-label">Blake</span> Right? I never thought about it until I tried to bulk-upload photos once and got that dreaded &quot;Rate limit exceeded&quot; message. Suddenly I&#x27;m like, wait, how does Instagram even know I&#x27;m going too fast?</p>
+<p class="host-line host-a"><span class="host-label">Alex</span> Exactly! And here&#x27;s the thing — it&#x27;s not just about stopping spam. When you&#x27;re handling millions of requests per second like Twitter during the Super Bowl, you need rate limiting to prevent your entire system from melting down. One user with a buggy script shouldn&#x27;t be able to take down your API for everyone else.</p>
+<p class="host-line host-b"><span class="host-label">Blake</span> Oh that&#x27;s nasty. So it&#x27;s like... traffic control for your servers?</p>
+<p class="host-line host-a"><span class="host-label">Alex</span> Perfect analogy. But here&#x27;s where it gets tricky — you need to be fair but also handle legitimate bursts. Like, if someone&#x27;s mobile app reconnects and sends 50 cached requests at once, that&#x27;s probably okay. But 50 requests per second for an hour? That&#x27;s suspicious.</p>
+<hr style="border:none; border-top:1px solid rgba(255,255,255,0.1); margin:16px 0;" />
+<h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#a78bfa; margin:20px 0 10px;">Segment 2: Interview Framework (~3 min)</h3>
+<p class="host-line host-a"><span class="host-label">Alex</span> So if you got this in an interview, where do you start?</p>
+<p class="host-line host-b"><span class="host-label">Blake</span> Okay, requirements gathering time. Functional requirements — we need to limit requests per user, return proper error codes when limits are hit, and... handle different rate limits for different endpoints?</p>
+<p class="host-line host-a"><span class="host-label">Alex</span> Good start! Don&#x27;t forget about non-functional stuff. What&#x27;s our scale? Are we talking 1000 requests per second or 100,000? Latency matters too — adding 50ms to every request for rate limiting is not gonna fly.</p>
+<p class="host-line host-b"><span class="host-label">Blake</span> Right, and what about availability? If our rate limiter goes down, do we fail open or fail closed?</p>
+<p class="host-line host-a"><span class="host-label">Alex</span> Ooh, good catch. Let&#x27;s say we&#x27;re building for a social media API — 10 million users, 1000 requests per user per hour, peaks at 100K QPS during events. Back-of-envelope math... that&#x27;s roughly 28 requests per second average, but we need to handle those bursts.</p>
+<p class="host-line host-b"><span class="host-label">Blake</span> For storage, if we&#x27;re tracking per-user counters... 10 million users times maybe 8 bytes per counter, that&#x27;s only 80MB. Pretty manageable in Redis.</p>
+<p class="host-line host-a"><span class="host-label">Alex</span> Nice! High-level architecture — API gateway with rate limiting middleware, Redis for counter storage, and probably some async processing for non-critical updates. The key is keeping the hot path fast.</p>
+<p class="host-line host-b"><span class="host-label">Blake</span> Wait, but what about distributed systems? If I have multiple API servers, they all need to coordinate on these limits, right?</p>
+<p class="host-line host-a"><span class="host-label">Alex</span> *laughs* And there&#x27;s the million-dollar question! That&#x27;s where things get spicy.</p>
+<hr style="border:none; border-top:1px solid rgba(255,255,255,0.1); margin:16px 0;" />
+<h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#a78bfa; margin:20px 0 10px;">Segment 3: Deep Dive (~3 min)</h3>
+<p class="host-line host-a"><span class="host-label">Alex</span> Okay, now let&#x27;s get into the hard parts. First big decision — which algorithm? Token bucket, sliding window, fixed window, or leaky bucket?</p>
+<p class="host-line host-b"><span class="host-label">Blake</span> I always get these confused. Token bucket is like... you get tokens at a steady rate and spend them on requests?</p>
+<p class="host-line host-a"><span class="host-label">Alex</span> Exactly! It&#x27;s great for handling bursts — you can save up tokens and then spend them all at once. But sliding window is more memory-intensive but fairer. Fixed window is simple but has that boundary problem where you can get 2x your limit by hitting the boundary just right.</p>
+<p class="host-line host-b"><span class="host-label">Blake</span> Oh that&#x27;s sneaky! So someone could send 1000 requests at 11:59:59 and another 1000 at 12:00:01?</p>
+<p class="host-line host-a"><span class="host-label">Alex</span> Bingo! Now, distributed coordination — this is where it gets nasty. You could use Redis with atomic operations, but now you&#x27;re adding network latency to every request. Or you could do local counting with periodic sync, but then you lose accuracy.</p>
+<p class="host-line host-b"><span class="host-label">Blake</span> Hmm, what about the thundering herd problem? If 100 servers all try to update the same Redis counter at once...</p>
+<p class="host-line host-a"><span class="host-label">Alex</span> *groans* Don&#x27;t even get me started. You need batching, you need proper Redis clustering, maybe even eventual consistency. Stripe actually does some clever stuff here with multiple Redis instances and reconciliation.</p>
+<p class="host-line host-b"><span class="host-label">Blake</span> And what happens when Redis goes down? Do we just... let everyone through?</p>
+<p class="host-line host-a"><span class="host-label">Alex</span> That&#x27;s the classic fail-open vs fail-closed dilemma. Most companies fail open because availability trumps perfect rate limiting. But then you need local fallbacks, circuit breakers, the whole nine yards.</p>
+<hr style="border:none; border-top:1px solid rgba(255,255,255,0.1); margin:16px 0;" />
+<h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#a78bfa; margin:20px 0 10px;">Segment 4: How They Actually Built It (~2 min)</h3>
+<p class="host-line host-a"><span class="host-label">Alex</span> So how does Stripe actually handle this in production? They&#x27;re processing billions of API requests with sub-millisecond latency impact.</p>
+<p class="host-line host-b"><span class="host-label">Blake</span> I read their blog post — they use Redis with sliding window counters, but the clever part is how they batch operations and use Lua scripts for atomicity.</p>
+<p class="host-line host-a"><span class="host-label">Alex</span> Right! And Cloudflare takes it even further — they do rate limiting at their edge network level. So they&#x27;re blocking bad traffic before it even hits your servers. That&#x27;s like having bouncers at every entrance to the city, not just your building.</p>
+<p class="host-line host-b"><span class="host-label">Blake</span> That&#x27;s actually brilliant. GitHub has a fun story too — they started with simple counters but had to evolve to handle sophisticated abuse patterns. Turns out people get really creative when trying to scrape GitHub repos.</p>
+<p class="host-line host-a"><span class="host-label">Alex</span> *laughs* Oh I bet. Twitter&#x27;s approach during high-traffic events is fascinating too. They basically have multiple tiers — aggressive limiting for suspicious patterns, but they relax limits for verified accounts during major news events.</p>
+<p class="host-line host-b"><span class="host-label">Blake</span> Makes sense. You don&#x27;t want to rate limit the President&#x27;s Twitter account during a crisis because your algorithm thinks they&#x27;re tweeting too much.</p>
+<p class="host-line host-a"><span class="host-label">Alex</span> Exactly! The real world is messier than the textbook version. You need business logic, special cases, and a lot of monitoring to see how your limits affect real user behavior.</p>
+<hr style="border:none; border-top:1px solid rgba(255,255,255,0.1); margin:16px 0;" />
+<h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#a78bfa; margin:20px 0 10px;">Segment 5: Interview Tips (~1 min)</h3>
+<p class="host-line host-a"><span class="host-label">Alex</span> Alright, rapid-fire interview tips for this one...</p>
+<p class="host-line host-b"><span class="host-label">Blake</span> First — always ask about the specific use case. Rate limiting for a payment API is very different from rate limiting for social media posts.</p>
+<p class="host-line host-a"><span class="host-label">Alex</span> Yes! And don&#x27;t just jump to Redis. Ask about latency requirements first. Sometimes in-memory with periodic sync is fine, sometimes you need a full distributed consensus system.</p>
+<p class="host-line host-b"><span class="host-label">Blake</span> Common mistake — forgetting about monitoring. If you can&#x27;t see your rate limit hit rates and false positives, you&#x27;re flying blind.</p>
+<p class="host-line host-a"><span class="host-label">Alex</span> And please, for the love of all that&#x27;s holy, don&#x27;t implement synchronous Redis calls on every request without thinking about batching or async updates.</p>
+<p class="host-line host-b"><span class="host-label">Blake</span> *laughs* &quot;Just throw Redis at it&quot; — the battle cry of engineers everywhere.</p>
+<p class="host-line host-a"><span class="host-label">Alex</span> Key takeaway — rate limiting is easy in theory, brutal in practice. It&#x27;s all about the trade-offs between accuracy, latency, and complexity.</p>
+<p class="host-line host-b"><span class="host-label">Blake</span> And remember, the best rate limiter is one that users never notice... until they really need it.</p>
+<hr style="border:none; border-top:1px solid rgba(255,255,255,0.1); margin:16px 0;" />
+<h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#a78bfa; margin:20px 0 10px;">References</h3>
+<h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#a78bfa; margin:20px 0 10px;">Architecture Diagram</h3>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Sidebar -->
+    <aside class="episode-sidebar">
+
+      <div class="sidebar-card">
+        <h3>References</h3>
+        <ul class="references-list" id="references">
+<li><span class="ref-company">Stripe</span><span class="ref-detail">Stripe&#x27;s comprehensive rate limiting system using Redis with sliding window counters, handling billions of API requests with sub-millisecond latency impact</span><a href="https://stripe.com/blog/rate-limiters" target="_blank" rel="noopener">https://stripe.com/blog/rate-limiters</a></li>
+<li><span class="ref-company">Cloudflare</span><span class="ref-detail">Cloudflare&#x27;s distributed rate limiting implementation using their global edge network, handling DDoS protection and API rate limiting at massive scale</span><a href="https://blog.cloudflare.com/counting-things-a-lot-of-different-things/" target="_blank" rel="noopener">https://blog.cloudflare.com/counting-things-a-lot-of-differe…</a></li>
+<li><span class="ref-company">GitHub</span><span class="ref-detail">GitHub&#x27;s API rate limiting evolution from simple counters to sophisticated abuse detection, including their approach to handling authenticated vs unauthenticated requests</span><a href="https://github.blog/2021-04-05-how-we-scaled-github-api-with-a-sharded-replicated-rate-limiter-in-redis/" target="_blank" rel="noopener">https://github.blog/2021-04-05-how-we-scaled-github-api-with…</a></li>
+<li><span class="ref-company">Twitter</span><span class="ref-detail">Twitter&#x27;s rate limiting challenges during high-traffic events and their approach to preventing API abuse while maintaining service availability</span><a href="https://blog.twitter.com/engineering/en_us/topics/infrastructure/2017/the-infrastructure-behind-twitter-scale" target="_blank" rel="noopener">https://blog.twitter.com/engineering/en_us/topics/infrastruc…</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-card">
+        <h3>Episode Info</h3>
+        <p style="font-size:0.85rem; color:var(--text-light); line-height:1.6;">
+          <strong>Hosts:</strong> Alex &amp; Blake (AI)<br />
+          <strong>Season:</strong> 1<br />
+          <strong>Episode:</strong> 2<br />
+          <strong>Topic:</strong> Rate Limiter<br />
+          <strong>Format:</strong> 5 segments, ~10 minutes
+        </p>
+      </div>
+
+      <div class="sidebar-card">
+        <h3>More Episodes</h3>
+        <p style="font-size:0.85rem; color:var(--text-light);">
+          <a href="../index.html">← Back to all episodes</a>
+        </p>
+      </div>
+
+    </aside>
+  </div>
+</div>
+
+<!-- ── Footer ── -->
+<footer class="site-footer">
+  <div class="container">
+    <p>
+      System Design Podcast · AI-generated ·
+      <a href="https://github.com/YushengAuggie/byte-by-design" target="_blank" rel="noopener">GitHub</a> ·
+      <a href="../feed.xml">RSS</a> ·
+      Built by <a href="https://yushengauggie.github.io" target="_blank" rel="noopener">Yusheng Ding</a>
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>
