@@ -5,28 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Architecture Diagram</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
-    background: #0d1117;
-    color: #e6edf3;
+    background: #0f0f0f;
+    color: #e0e0e0;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
   }
 
   .diagram-title {
     text-align: center;
-    padding: 20px 16px 8px;
-    font-size: 20px;
+    padding: 16px 16px 4px;
+    font-size: 1.2rem;
     font-weight: 700;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.02em;
     color: #ffffff;
+    text-shadow: 0 0 30px rgba(108, 99, 255, 0.25);
     flex-shrink: 0;
   }
 
@@ -35,37 +32,35 @@
     width: 100%;
     overflow: auto;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
-    padding: 12px 16px;
+    padding: 8px 12px;
   }
 
   svg.diagram-svg {
     display: block;
-    max-width: 100%;
-    height: auto;
   }
 
   /* ── Nodes ── */
   .node-group { cursor: pointer; }
 
   .node-rect {
-    rx: 10; ry: 10;
-    stroke-width: 1.8;
-    transition: filter 0.2s, stroke-width 0.2s;
+    rx: 8; ry: 8;
+    stroke-width: 1.5;
+    transition: filter 0.25s, stroke-width 0.25s;
   }
 
   .node-group:hover .node-rect,
   .node-group.highlighted .node-rect {
     stroke-width: 2.5;
-    filter: drop-shadow(0 0 12px var(--node-color));
+    filter: drop-shadow(0 0 10px var(--node-color));
   }
 
-  .node-group.dimmed { opacity: 0.1; transition: opacity 0.25s; }
-  .node-group:not(.dimmed) { transition: opacity 0.25s; }
+  .node-group.dimmed { opacity: 0.12; transition: opacity 0.3s; }
+  .node-group:not(.dimmed) { transition: opacity 0.3s; }
 
   .node-icon {
-    font-size: 15px;
+    font-size: 13px;
     text-anchor: middle;
     dominant-baseline: central;
     pointer-events: none;
@@ -73,103 +68,99 @@
 
   .node-label {
     fill: #ffffff;
-    font-size: 13px;
+    font-size: 10.5px;
     font-weight: 600;
     text-anchor: middle;
     dominant-baseline: central;
     pointer-events: none;
-    letter-spacing: -0.01em;
   }
 
   /* ── Edges ── */
   .edge-path {
-    stroke: #3d444d;
-    stroke-width: 1.5;
+    stroke: #555;
+    stroke-width: 1.2;
     fill: none;
-    transition: stroke 0.2s, stroke-width 0.2s;
+    transition: stroke 0.25s, stroke-width 0.25s;
     marker-end: url(#arrowhead);
   }
 
   .edge-path.highlighted {
     stroke: #6c63ff;
-    stroke-width: 2.5;
-    stroke-dasharray: 8 4;
+    stroke-width: 2;
+    stroke-dasharray: 6 3;
     animation: dash-flow 0.6s linear infinite;
     marker-end: url(#arrowhead-hl);
   }
 
-  .edge-path.dimmed { opacity: 0.05; transition: opacity 0.25s; }
+  .edge-path.dimmed { opacity: 0.06; transition: opacity 0.3s; }
 
-  @keyframes dash-flow { to { stroke-dashoffset: -12; } }
+  @keyframes dash-flow { to { stroke-dashoffset: -9; } }
 
   .edge-label {
-    fill: #8b949e;
-    font-size: 10px;
-    font-weight: 500;
+    fill: #888;
+    font-size: 8px;
     text-anchor: middle;
     dominant-baseline: central;
     pointer-events: none;
   }
-  .edge-label.highlighted { fill: #c9d1d9; }
-  .edge-label.dimmed { opacity: 0.05; }
+  .edge-label.highlighted { fill: #bbb; }
+  .edge-label.dimmed { opacity: 0.06; }
 
   .edge-label-bg {
-    fill: #0d1117;
-    opacity: 0.9;
+    fill: #0f0f0f;
+    opacity: 0.85;
   }
-  .edge-label-bg.dimmed { opacity: 0.05; }
+  .edge-label-bg.dimmed { opacity: 0.06; }
 
   /* ── Groups ── */
   .group-rect {
-    fill: rgba(255,255,255,0.025);
-    stroke: rgba(255,255,255,0.08);
-    stroke-width: 1;
-    stroke-dasharray: 6 4;
-    rx: 12; ry: 12;
+    fill: rgba(255,255,255,0.018);
+    stroke: rgba(255,255,255,0.12);
+    stroke-dasharray: 5 3;
+    rx: 10; ry: 10;
   }
   .group-label {
-    fill: rgba(255,255,255,0.4);
-    font-size: 11px;
+    fill: rgba(255,255,255,0.35);
+    font-size: 9px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.1em;
   }
 
   /* ── Tooltip ── */
   .tooltip {
     position: fixed;
-    background: #161b22;
-    border: 1px solid rgba(108,99,255,0.35);
-    border-radius: 12px;
-    padding: 14px 18px;
-    max-width: 320px;
+    background: #1a1a2e;
+    border: 1px solid rgba(108,99,255,0.4);
+    border-radius: 10px;
+    padding: 12px 16px;
+    max-width: 280px;
     pointer-events: none;
     opacity: 0;
     transform: translateY(6px);
     transition: opacity 0.2s, transform 0.2s;
     z-index: 100;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
   }
   .tooltip.visible { opacity: 1; transform: translateY(0); }
-  .tooltip-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 4px; color: #fff; }
+  .tooltip-title { font-weight: 700; font-size: 0.85rem; margin-bottom: 4px; color: #fff; }
   .tooltip-type {
-    display: inline-block; font-size: 0.65rem; font-weight: 600;
+    display: inline-block; font-size: 0.6rem; font-weight: 600;
     text-transform: uppercase; letter-spacing: 0.06em;
-    padding: 2px 8px; border-radius: 4px; margin-bottom: 8px;
+    padding: 2px 7px; border-radius: 4px; margin-bottom: 6px;
   }
-  .tooltip-desc { font-size: 0.8rem; line-height: 1.5; color: #8b949e; }
+  .tooltip-desc { font-size: 0.75rem; line-height: 1.45; color: #bbb; }
 
   /* ── Legend ── */
   .legend {
     display: flex; flex-wrap: wrap; justify-content: center;
-    gap: 14px; padding: 8px 16px 14px; flex-shrink: 0;
+    gap: 10px; padding: 6px 16px 10px; flex-shrink: 0;
   }
   .legend-item {
-    display: flex; align-items: center; gap: 6px;
-    font-size: 0.7rem; color: #8b949e; text-transform: capitalize;
-    font-weight: 500;
+    display: flex; align-items: center; gap: 4px;
+    font-size: 0.6rem; color: #777; text-transform: capitalize;
   }
-  .legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
 </style>
 </head>
 <body>
@@ -178,11 +169,11 @@
 <div class="canvas-wrap">
   <svg class="diagram-svg" id="svgCanvas" xmlns="http://www.w3.org/2000/svg">
     <defs>
-      <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-        <polygon points="0 0, 8 3, 0 6" fill="#3d444d" />
+      <marker id="arrowhead" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+        <polygon points="0 0, 7 2.5, 0 5" fill="#555" />
       </marker>
-      <marker id="arrowhead-hl" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-        <polygon points="0 0, 8 3, 0 6" fill="#6c63ff" />
+      <marker id="arrowhead-hl" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+        <polygon points="0 0, 7 2.5, 0 5" fill="#6c63ff" />
       </marker>
     </defs>
   </svg>
@@ -196,108 +187,360 @@
 </div>
 
 <script>
-const TYPE_COLORS = {"client": "#6c63ff", "server": "#3dd9c6", "database": "#ff6b6b", "cache": "#ffd43b", "queue": "#74c0fc", "service": "#b197fc", "storage": "#f06595", "external": "#868e96", "monitoring": "#38d9a9"};
-const TYPE_ICONS = {"client": "\ud83d\udc64", "server": "\u2699\ufe0f", "database": "\ud83d\uddc4\ufe0f", "cache": "\u26a1", "queue": "\ud83d\udce8", "service": "\ud83d\udd27", "storage": "\ud83d\udcbe", "external": "\ud83c\udf10", "monitoring": "\ud83d\udcca"};
+const TYPE_COLORS = {
+  client:'#6c63ff', server:'#4ecdc4', database:'#ff6b6b', cache:'#ffd93d',
+  queue:'#95e1d3', service:'#a78bfa', storage:'#f38181', external:'#888888',
+  monitoring:'#45b7d1'
+};
+const TYPE_ICONS = {
+  client:'👤', server:'⚙️', database:'🗄️', cache:'⚡', queue:'📨',
+  service:'🔧', storage:'💾', external:'🌐', monitoring:'📊'
+};
 
-const DATA = {"title": "URL Shortener System Architecture", "nodes": [{"id": "load_balancer", "label": "Load Balancer", "type": "server", "description": "Distributes incoming requests across multiple application servers and handles SSL termination."}, {"id": "web_servers", "label": "App Servers", "type": "server", "description": "Handle URL shortening requests and redirect operations with horizontal scaling capability."}, {"id": "url_encoding_service", "label": "URL Encoder", "type": "service", "description": "Generates unique short codes using Base62 encoding and handles collision detection."}, {"id": "rate_limiter", "label": "Rate Limiter", "type": "service", "description": "Prevents abuse and spam by limiting requests per user/IP with sliding window algorithms."}, {"id": "redis_cache", "label": "Redis Cache", "type": "cache", "description": "Caches hot URL mappings to handle 100:1 read-to-write ratio with sub-millisecond lookups."}, {"id": "primary_db", "label": "Primary Database", "type": "database", "description": "Stores URL mappings with sharding strategy to handle billions of records and fast lookups."}, {"id": "analytics_service", "label": "Analytics Svc", "type": "service", "description": "Processes click events asynchronously to track metrics without impacting redirect latency."}, {"id": "analytics_db", "label": "Analytics DB", "type": "database", "description": "Time-series database optimized for storing click events and generating usage reports."}, {"id": "message_queue", "label": "Message Queue", "type": "queue", "description": "Buffers click events for asynchronous processing by analytics service."}, {"id": "cdn", "label": "CDN", "type": "external", "description": "Global content delivery network to minimize redirect latency across geographic regions."}, {"id": "cleanup_service", "label": "Cleanup Service", "type": "service", "description": "Background job that removes expired URLs and maintains database performance."}, {"id": "monitoring", "label": "Monitoring", "type": "monitoring", "description": "Tracks system health, performance metrics, and provides alerting for the distributed system."}], "edges": [{"from": "cdn", "to": "load_balancer", "label": "HTTPS"}, {"from": "load_balancer", "to": "web_servers", "label": "HTTP"}, {"from": "web_servers", "to": "rate_limiter", "label": "Rate Check"}, {"from": "web_servers", "to": "url_encoding_service", "label": "Generate Short URL"}, {"from": "web_servers", "to": "redis_cache", "label": "Cache Lookup"}, {"from": "redis_cache", "to": "primary_db", "label": "Cache Miss"}, {"from": "url_encoding_service", "to": "primary_db", "label": "Store Mapping"}, {"from": "web_servers", "to": "message_queue", "label": "Click Event"}, {"from": "message_queue", "to": "analytics_service", "label": "Event Processing"}, {"from": "analytics_service", "to": "analytics_db", "label": "Store Metrics"}, {"from": "cleanup_service", "to": "primary_db", "label": "Remove Expired"}, {"from": "monitoring", "to": "web_servers", "label": "Health Check"}, {"from": "monitoring", "to": "primary_db", "label": "DB Metrics"}], "groups": [{"label": "Frontend Layer", "nodeIds": ["cdn", "load_balancer"]}, {"label": "Application Layer", "nodeIds": ["web_servers", "url_encoding_service", "rate_limiter"]}, {"label": "Data Layer", "nodeIds": ["redis_cache", "primary_db", "analytics_db"]}, {"label": "Processing Layer", "nodeIds": ["analytics_service", "message_queue", "cleanup_service"]}, {"label": "Operations", "nodeIds": ["monitoring"]}]};
+const DATA = {
+  "title": "URL Shortener System Architecture",
+  "nodes": [
+    {
+      "id": "load_balancer",
+      "label": "Load Balancer",
+      "type": "server",
+      "description": "Distributes incoming requests across multiple application servers and handles SSL termination."
+    },
+    {
+      "id": "web_servers",
+      "label": "Web Application Servers",
+      "type": "server",
+      "description": "Handle URL shortening requests and redirect operations with horizontal scaling capability."
+    },
+    {
+      "id": "url_encoding_service",
+      "label": "URL Encoding Service",
+      "type": "service",
+      "description": "Generates unique short codes using Base62 encoding and handles collision detection."
+    },
+    {
+      "id": "rate_limiter",
+      "label": "Rate Limiting Service",
+      "type": "service",
+      "description": "Prevents abuse and spam by limiting requests per user/IP with sliding window algorithms."
+    },
+    {
+      "id": "redis_cache",
+      "label": "Redis Cache",
+      "type": "cache",
+      "description": "Caches hot URL mappings to handle 100:1 read-to-write ratio with sub-millisecond lookups."
+    },
+    {
+      "id": "primary_db",
+      "label": "Primary Database",
+      "type": "database",
+      "description": "Stores URL mappings with sharding strategy to handle billions of records and fast lookups."
+    },
+    {
+      "id": "analytics_service",
+      "label": "Analytics Service",
+      "type": "service",
+      "description": "Processes click events asynchronously to track metrics without impacting redirect latency."
+    },
+    {
+      "id": "analytics_db",
+      "label": "Analytics Database",
+      "type": "database",
+      "description": "Time-series database optimized for storing and querying click analytics and metrics."
+    },
+    {
+      "id": "message_queue",
+      "label": "Message Queue",
+      "type": "queue",
+      "description": "Buffers click events for asynchronous processing by analytics service."
+    },
+    {
+      "id": "cdn",
+      "label": "CDN",
+      "type": "external",
+      "description": "Global content delivery network to minimize redirect latency across geographic regions."
+    },
+    {
+      "id": "monitoring",
+      "label": "Monitoring & Logging",
+      "type": "monitoring",
+      "description": "Tracks system health, performance metrics, and provides alerting for the distributed system."
+    },
+    {
+      "id": "cleanup_service",
+      "label": "Cleanup Service",
+      "type": "service",
+      "description": "Background job that removes expired URLs and maintains database hygiene."
+    }
+  ],
+  "edges": [
+    {
+      "from": "cdn",
+      "to": "load_balancer",
+      "label": "HTTPS"
+    },
+    {
+      "from": "load_balancer",
+      "to": "web_servers",
+      "label": "HTTP"
+    },
+    {
+      "from": "web_servers",
+      "to": "rate_limiter",
+      "label": "Rate Check"
+    },
+    {
+      "from": "web_servers",
+      "to": "redis_cache",
+      "label": "Cache Lookup"
+    },
+    {
+      "from": "web_servers",
+      "to": "url_encoding_service",
+      "label": "Generate Short URL"
+    },
+    {
+      "from": "web_servers",
+      "to": "primary_db",
+      "label": "DB Query"
+    },
+    {
+      "from": "web_servers",
+      "to": "message_queue",
+      "label": "Click Event"
+    },
+    {
+      "from": "url_encoding_service",
+      "to": "primary_db",
+      "label": "Store Mapping"
+    },
+    {
+      "from": "redis_cache",
+      "to": "primary_db",
+      "label": "Cache Miss"
+    },
+    {
+      "from": "message_queue",
+      "to": "analytics_service",
+      "label": "Event Processing"
+    },
+    {
+      "from": "analytics_service",
+      "to": "analytics_db",
+      "label": "Store Metrics"
+    },
+    {
+      "from": "cleanup_service",
+      "to": "primary_db",
+      "label": "Cleanup Expired"
+    },
+    {
+      "from": "monitoring",
+      "to": "web_servers",
+      "label": "Health Check"
+    },
+    {
+      "from": "monitoring",
+      "to": "primary_db",
+      "label": "DB Metrics"
+    }
+  ],
+  "groups": [
+    {
+      "label": "Frontend Layer",
+      "nodeIds": [
+        "cdn",
+        "load_balancer"
+      ]
+    },
+    {
+      "label": "Application Layer",
+      "nodeIds": [
+        "web_servers",
+        "url_encoding_service",
+        "rate_limiter"
+      ]
+    },
+    {
+      "label": "Data Layer",
+      "nodeIds": [
+        "redis_cache",
+        "primary_db",
+        "analytics_db"
+      ]
+    },
+    {
+      "label": "Analytics Pipeline",
+      "nodeIds": [
+        "message_queue",
+        "analytics_service",
+        "analytics_db"
+      ]
+    },
+    {
+      "label": "Operations",
+      "nodeIds": [
+        "monitoring",
+        "cleanup_service"
+      ]
+    }
+  ]
+};
 
-const NODE_W = 180, NODE_H = 52;
-const H_GAP = 60, V_GAP = 90;
-const GROUP_PAD_X = 30, GROUP_PAD_Y = 38;
-const GROUP_LABEL_H = 26;
-const CANVAS_PAD = 50;
-
-/* ─── Improved layout engine ─── */
+/* ─── Group-aware layout engine ─── */
 function layoutNodes(nodes, edges, groups) {
+  const nodeW = 150, nodeH = 42;
+  const hGap = 30, vGap = 55;
+  const groupPadX = 20, groupPadY = 28, groupLabelH = 18;
+  const canvasPad = 30;
+
+  // Build group membership map
+  const nodeGroup = {};  // nodeId → groupIndex
+  (groups || []).forEach((g, gi) => {
+    (g.nodeIds || []).forEach(nid => { nodeGroup[nid] = gi; });
+  });
+
+  // Adjacency
+  const outgoing = {}, incoming = {};
+  nodes.forEach(n => { outgoing[n.id] = []; incoming[n.id] = []; });
+  edges.forEach(e => {
+    if (outgoing[e.from]) outgoing[e.from].push(e.to);
+    if (incoming[e.to]) incoming[e.to].push(e.from);
+  });
+
+  // If groups exist, lay out by group rows
+  // Each group becomes a row, arranged top-to-bottom
+  // Within each group, nodes arranged left-to-right
+  // Ungrouped nodes get their own row at the end
+
   const positions = {};
-  const nodeMap = {};
-  nodes.forEach(n => { nodeMap[n.id] = n; });
 
-  if (!groups || groups.length === 0) {
-    // Fallback: simple grid
-    const cols = Math.ceil(Math.sqrt(nodes.length));
-    nodes.forEach((n, i) => {
-      const row = Math.floor(i / cols);
-      const col = i % cols;
-      positions[n.id] = {
-        x: CANVAS_PAD + col * (NODE_W + H_GAP),
-        y: CANVAS_PAD + row * (NODE_H + V_GAP),
-        w: NODE_W, h: NODE_H
-      };
+  if (groups && groups.length > 0) {
+    let currentY = canvasPad;
+    let maxW = 0;
+
+    const groupBounds = []; // for drawing group boxes later
+
+    groups.forEach((g, gi) => {
+      const gNodes = (g.nodeIds || []).map(id => nodes.find(n => n.id === id)).filter(Boolean);
+      if (gNodes.length === 0) return;
+
+      const rowTop = currentY;
+      const nodesY = rowTop + groupLabelH + groupPadY;
+      const rowW = gNodes.length * nodeW + (gNodes.length - 1) * hGap;
+      if (rowW > maxW) maxW = rowW;
+
+      gNodes.forEach((n, i) => {
+        positions[n.id] = {
+          x: groupPadX + i * (nodeW + hGap),
+          y: nodesY,
+          w: nodeW,
+          h: nodeH
+        };
+      });
+
+      groupBounds.push({
+        gi, label: g.label,
+        top: rowTop,
+        bottom: nodesY + nodeH + groupPadY,
+        nodeCount: gNodes.length
+      });
+
+      currentY = nodesY + nodeH + groupPadY + vGap;
     });
-    const maxCol = Math.min(nodes.length, cols);
-    const maxRow = Math.ceil(nodes.length / cols);
-    return {
-      positions,
-      canvasW: maxCol * (NODE_W + H_GAP) - H_GAP + CANVAS_PAD * 2,
-      canvasH: maxRow * (NODE_H + V_GAP) - V_GAP + CANVAS_PAD * 2
-    };
+
+    // Ungrouped nodes
+    const ungrouped = nodes.filter(n => nodeGroup[n.id] === undefined);
+    if (ungrouped.length > 0) {
+      const rowW = ungrouped.length * nodeW + (ungrouped.length - 1) * hGap;
+      if (rowW > maxW) maxW = rowW;
+      ungrouped.forEach((n, i) => {
+        positions[n.id] = {
+          x: groupPadX + i * (nodeW + hGap),
+          y: currentY,
+          w: nodeW,
+          h: nodeH
+        };
+      });
+      currentY += nodeH + vGap;
+    }
+
+    // Now center each row horizontally
+    const totalW = maxW + groupPadX * 2 + canvasPad * 2;
+
+    groups.forEach(g => {
+      const gNodes = (g.nodeIds || []).map(id => nodes.find(n => n.id === id)).filter(Boolean);
+      if (gNodes.length === 0) return;
+      const rowW = gNodes.length * nodeW + (gNodes.length - 1) * hGap;
+      const offsetX = (totalW - rowW) / 2 - groupPadX;
+      gNodes.forEach(n => {
+        if (positions[n.id]) positions[n.id].x += offsetX;
+      });
+    });
+
+    if (ungrouped.length > 0) {
+      const rowW = ungrouped.length * nodeW + (ungrouped.length - 1) * hGap;
+      const offsetX = (totalW - rowW) / 2 - groupPadX;
+      ungrouped.forEach(n => {
+        if (positions[n.id]) positions[n.id].x += offsetX;
+      });
+    }
+
+    const canvasW = totalW;
+    const canvasH = currentY - vGap + canvasPad;
+    return { positions, canvasW, canvasH };
+
+  } else {
+    // No groups — use BFS layering
+    const layers = {};
+    const roots = nodes.filter(n => incoming[n.id].length === 0).map(n => n.id);
+    if (roots.length === 0 && nodes.length > 0) roots.push(nodes[0].id);
+
+    const visited = new Set();
+    let queue = roots.map(id => ({ id, layer: 0 }));
+    let maxLayer = 0;
+
+    while (queue.length > 0) {
+      const next = [];
+      for (const { id, layer } of queue) {
+        if (visited.has(id)) continue;
+        visited.add(id);
+        layers[id] = Math.max(layers[id] || 0, layer);
+        if (layers[id] > maxLayer) maxLayer = layers[id];
+        for (const child of (outgoing[id] || [])) {
+          if (!visited.has(child)) next.push({ id: child, layer: layers[id] + 1 });
+        }
+      }
+      queue = next;
+    }
+
+    nodes.forEach(n => {
+      if (!visited.has(n.id)) { maxLayer++; layers[n.id] = maxLayer; }
+    });
+
+    const buckets = {};
+    nodes.forEach(n => {
+      const l = layers[n.id] || 0;
+      if (!buckets[l]) buckets[l] = [];
+      buckets[l].push(n);
+    });
+
+    const maxBucketSize = Math.max(...Object.values(buckets).map(b => b.length), 1);
+    const canvasW = maxBucketSize * (nodeW + hGap) - hGap + canvasPad * 2;
+    const canvasH = (maxLayer + 1) * (nodeH + vGap) - vGap + canvasPad * 2;
+
+    Object.entries(buckets).forEach(([l, bucket]) => {
+      const layerIdx = parseInt(l);
+      const y = canvasPad + layerIdx * (nodeH + vGap);
+      const totalW = bucket.length * nodeW + (bucket.length - 1) * hGap;
+      const startX = (canvasW - totalW) / 2;
+      bucket.forEach((n, i) => {
+        positions[n.id] = { x: startX + i * (nodeW + hGap), y, w: nodeW, h: nodeH };
+      });
+    });
+
+    return { positions, canvasW, canvasH };
   }
-
-  // Smart layout: place groups as rows, center-aligned
-  // Calculate max row width to determine canvas width
-  let maxRowW = 0;
-  groups.forEach(g => {
-    const count = (g.nodeIds || []).length;
-    const rowW = count * NODE_W + (count - 1) * H_GAP + GROUP_PAD_X * 2;
-    if (rowW > maxRowW) maxRowW = rowW;
-  });
-
-  const canvasW = Math.max(maxRowW + CANVAS_PAD * 2, 1400);
-  let currentY = CANVAS_PAD;
-  const groupBounds = [];
-
-  groups.forEach((g, gi) => {
-    const gNodes = (g.nodeIds || []).map(id => nodeMap[id]).filter(Boolean);
-    if (gNodes.length === 0) return;
-
-    const rowTop = currentY;
-    const nodesY = rowTop + GROUP_LABEL_H + GROUP_PAD_Y;
-    const rowW = gNodes.length * NODE_W + (gNodes.length - 1) * H_GAP;
-    const startX = (canvasW - rowW) / 2;
-
-    gNodes.forEach((n, i) => {
-      positions[n.id] = {
-        x: startX + i * (NODE_W + H_GAP),
-        y: nodesY,
-        w: NODE_W, h: NODE_H
-      };
-    });
-
-    const groupLeft = startX - GROUP_PAD_X;
-    const groupRight = startX + rowW + GROUP_PAD_X;
-    const groupBottom = nodesY + NODE_H + GROUP_PAD_Y;
-
-    groupBounds.push({
-      label: g.label,
-      x: groupLeft,
-      y: rowTop,
-      w: groupRight - groupLeft,
-      h: groupBottom - rowTop
-    });
-
-    currentY = groupBottom + V_GAP;
-  });
-
-  // Ungrouped nodes
-  const grouped = new Set();
-  groups.forEach(g => (g.nodeIds || []).forEach(id => grouped.add(id)));
-  const ungrouped = nodes.filter(n => !grouped.has(n.id));
-  if (ungrouped.length > 0) {
-    const rowW = ungrouped.length * NODE_W + (ungrouped.length - 1) * H_GAP;
-    const startX = (canvasW - rowW) / 2;
-    ungrouped.forEach((n, i) => {
-      positions[n.id] = {
-        x: startX + i * (NODE_W + H_GAP),
-        y: currentY,
-        w: NODE_W, h: NODE_H
-      };
-    });
-    currentY += NODE_H + V_GAP;
-  }
-
-  const canvasH = Math.max(currentY - V_GAP + CANVAS_PAD, 820);
-  return { positions, canvasW, canvasH, groupBounds };
 }
 
 /* ── SVG helpers ── */
@@ -308,14 +551,16 @@ function svgEl(tag, attrs) {
   return el;
 }
 
-/* ── Smooth edge path ── */
+/* ── Edge path with bezier curves ── */
 function edgePath(from, to) {
   const cx1 = from.x + from.w / 2, cy1 = from.y + from.h / 2;
   const cx2 = to.x + to.w / 2, cy2 = to.y + to.h / 2;
 
+  // Determine which sides to connect
   let x1, y1, x2, y2;
 
-  if (Math.abs(cy2 - cy1) > Math.abs(cx2 - cx1) * 0.25) {
+  if (Math.abs(cy2 - cy1) > Math.abs(cx2 - cx1) * 0.3) {
+    // Primarily vertical — connect bottom→top
     if (cy2 > cy1) {
       x1 = cx1; y1 = from.y + from.h;
       x2 = cx2; y2 = to.y;
@@ -324,6 +569,7 @@ function edgePath(from, to) {
       x2 = cx2; y2 = to.y + to.h;
     }
   } else {
+    // Primarily horizontal — connect right→left
     if (cx2 > cx1) {
       x1 = from.x + from.w; y1 = cy1;
       x2 = to.x; y2 = cy2;
@@ -333,94 +579,21 @@ function edgePath(from, to) {
     }
   }
 
+  const dx = x2 - x1, dy = y2 - y1;
   const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+
+  // Curve control points
   let d;
-  if (Math.abs(y2 - y1) > Math.abs(x2 - x1) * 0.4) {
+  if (Math.abs(dy) > Math.abs(dx) * 0.5) {
     d = `M${x1},${y1} C${x1},${my} ${x2},${my} ${x2},${y2}`;
   } else {
     d = `M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`;
   }
 
-  return { d, mx, my, x1, y1, x2, y2 };
+  return { d, mx, my };
 }
 
-/* ── Edge label overlap avoidance ── */
-function resolveEdgeLabelPositions(edgeInfos, positions) {
-  // edgeInfos: [{ mx, my, label, from, to, x1, y1, x2, y2 }]
-  // Returns adjusted positions so labels don't overlap nodes or each other
-  const PAD = 6;
-  const LABEL_H = 16;
-  const nodeRects = Object.values(positions);
-
-  function overlapsNode(lx, ly, lw) {
-    for (const r of nodeRects) {
-      if (lx + lw/2 > r.x - PAD && lx - lw/2 < r.x + r.w + PAD &&
-          ly + LABEL_H/2 > r.y - PAD && ly - LABEL_H/2 < r.y + r.h + PAD) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  function overlapsOtherLabel(lx, ly, lw, placed) {
-    for (const p of placed) {
-      if (Math.abs(lx - p.x) < (lw + p.w) / 2 + PAD &&
-          Math.abs(ly - p.y) < LABEL_H + PAD) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  const placed = [];
-  const results = [];
-
-  for (const info of edgeInfos) {
-    const { mx, my, x1, y1, x2, y2 } = info;
-    const lw = (info.label || '').length * 5.5 + 14;
-
-    // Generate candidate positions along the edge path and perpendicular to it
-    const dx = x2 - x1, dy = y2 - y1;
-    const len = Math.sqrt(dx*dx + dy*dy) || 1;
-    const ux = dx / len, uy = dy / len;  // unit along edge
-    const px = -uy, py = ux;              // perpendicular unit
-
-    const candidates = [];
-    // Positions at various t values along the edge
-    for (const t of [0.5, 0.35, 0.65, 0.25, 0.75]) {
-      const bx = x1 + dx * t, by = y1 + dy * t;
-      // At each t, try on-edge and offset perpendicular
-      for (const perpDist of [0, -22, 22, -40, 40]) {
-        candidates.push([bx + px * perpDist, by + py * perpDist]);
-      }
-    }
-    // Also try more aggressive perpendicular offsets from midpoint
-    for (const perpDist of [-55, 55, -70, 70]) {
-      candidates.push([mx + px * perpDist, my + py * perpDist]);
-    }
-
-    let bestX = mx, bestY = my;
-    let found = false;
-    for (const [tx, ty] of candidates) {
-      if (!overlapsNode(tx, ty, lw) && !overlapsOtherLabel(tx, ty, lw, placed)) {
-        bestX = tx; bestY = ty;
-        found = true;
-        break;
-      }
-    }
-
-    if (!found) {
-      // Last resort: push way out perpendicular
-      bestX = mx + px * 80;
-      bestY = my + py * 80;
-    }
-
-    placed.push({ x: bestX, y: bestY, w: lw });
-    results.push({ x: bestX, y: bestY });
-  }
-  return results;
-}
-
+/* ── Truncate long labels ── */
 function truncLabel(text, maxLen) {
   return text.length > maxLen ? text.slice(0, maxLen - 1) + '…' : text;
 }
@@ -434,47 +607,36 @@ function render() {
 
   title.textContent = DATA.title || 'Architecture Diagram';
 
-  const { positions, canvasW, canvasH, groupBounds } = layoutNodes(DATA.nodes, DATA.edges, DATA.groups || []);
+  const { positions, canvasW, canvasH } = layoutNodes(DATA.nodes, DATA.edges, DATA.groups || []);
   svg.setAttribute('viewBox', `0 0 ${canvasW} ${canvasH}`);
-  svg.style.width = canvasW + 'px';
-  svg.style.maxWidth = '100%';
+  svg.style.width = Math.min(canvasW, 1200) + 'px';
+  svg.style.height = (Math.min(canvasW, 1200) / canvasW * canvasH) + 'px';
 
   // ── Groups ──
-  (groupBounds || []).forEach(gb => {
+  (DATA.groups || []).forEach(g => {
+    const pts = (g.nodeIds || []).map(id => positions[id]).filter(Boolean);
+    if (!pts.length) return;
+    const pad = 18;
+    const x = Math.min(...pts.map(p => p.x)) - pad;
+    const y = Math.min(...pts.map(p => p.y)) - pad - 16;  // extra space for label
+    const x2 = Math.max(...pts.map(p => p.x + p.w)) + pad;
+    const y2 = Math.max(...pts.map(p => p.y + p.h)) + pad;
+
     svg.appendChild(svgEl('rect', {
-      class:'group-rect', x: gb.x, y: gb.y, width: gb.w, height: gb.h
+      class:'group-rect', x, y, width: x2-x, height: y2-y
     }));
-    const lbl = svgEl('text', { class:'group-label', x: gb.x + 14, y: gb.y + 16 });
-    lbl.textContent = gb.label;
+    const lbl = svgEl('text', { class:'group-label', x: x+10, y: y+13 });
+    lbl.textContent = g.label;
     svg.appendChild(lbl);
   });
 
-  // ── Edges (first pass: compute paths and collect label info) ──
+  // ── Edges ──
   const edgeEls = [];
-  const edgePaths = [];
-  const edgeLabelInfos = [];
-
   DATA.edges.forEach(e => {
     const f = positions[e.from], t = positions[e.to];
     if (!f || !t) return;
-    const pathInfo = edgePath(f, t);
-    edgePaths.push({ edge: e, pathInfo });
-    if (e.label) {
-      edgeLabelInfos.push({
-        mx: pathInfo.mx, my: pathInfo.my,
-        x1: pathInfo.x1, y1: pathInfo.y1,
-        x2: pathInfo.x2, y2: pathInfo.y2,
-        label: e.label, from: e.from, to: e.to
-      });
-    }
-  });
 
-  // Resolve label positions to avoid overlap
-  const labelPositions = resolveEdgeLabelPositions(edgeLabelInfos, positions);
-  let labelIdx = 0;
-
-  edgePaths.forEach(({ edge: e, pathInfo }) => {
-    const { d } = pathInfo;
+    const { d, mx, my } = edgePath(f, t);
     const path = svgEl('path', {
       class:'edge-path', d, fill:'none', 'data-from': e.from, 'data-to': e.to
     });
@@ -482,18 +644,17 @@ function render() {
     edgeEls.push({ el: path, from: e.from, to: e.to });
 
     if (e.label) {
-      const pos = labelPositions[labelIdx++];
-      const txtLen = e.label.length * 5.5 + 14;
+      const txtLen = e.label.length * 4.5 + 8;
       const bg = svgEl('rect', {
         class:'edge-label-bg',
-        x: pos.x - txtLen/2, y: pos.y - 8,
-        width: txtLen, height: 16, rx: 4
+        x: mx - txtLen/2, y: my - 7,
+        width: txtLen, height: 13, rx: 3
       });
       svg.appendChild(bg);
       edgeEls.push({ el: bg, from: e.from, to: e.to, isLabel: true });
 
       const lbl = svgEl('text', {
-        class:'edge-label', x: pos.x, y: pos.y,
+        class:'edge-label', x: mx, y: my,
         'data-from': e.from, 'data-to': e.to
       });
       lbl.textContent = e.label;
@@ -514,15 +675,14 @@ function render() {
       class:'node-group', 'data-id': n.id, style: `--node-color:${color}`
     });
 
-    // Node background with subtle gradient effect
     g.appendChild(svgEl('rect', {
       class:'node-rect', x: pos.x, y: pos.y,
       width: pos.w, height: pos.h,
-      fill: color + '18', stroke: color
+      fill: color + '15', stroke: color
     }));
 
     const iconEl = svgEl('text', {
-      class:'node-icon', x: pos.x + 18, y: pos.y + pos.h / 2
+      class:'node-icon', x: pos.x + 16, y: pos.y + pos.h / 2
     });
     iconEl.textContent = icon;
     g.appendChild(iconEl);
@@ -530,7 +690,7 @@ function render() {
     const labelEl = svgEl('text', {
       class:'node-label', x: pos.x + pos.w / 2 + 8, y: pos.y + pos.h / 2
     });
-    labelEl.textContent = truncLabel(n.label, 20);
+    labelEl.textContent = truncLabel(n.label, 22);
     g.appendChild(labelEl);
 
     svg.appendChild(g);
@@ -581,8 +741,8 @@ function render() {
       const te = document.getElementById('tooltipType');
       te.textContent = n.type; te.style.background = c+'30'; te.style.color = c;
       document.getElementById('tooltipDesc').textContent = n.description || '';
-      tooltip.style.left = Math.min(evt.clientX+12, window.innerWidth-340)+'px';
-      tooltip.style.top = Math.min(evt.clientY+12, window.innerHeight-160)+'px';
+      tooltip.style.left = Math.min(evt.clientX+12, window.innerWidth-300)+'px';
+      tooltip.style.top = Math.min(evt.clientY+12, window.innerHeight-140)+'px';
       tooltip.classList.add('visible');
     });
   });
