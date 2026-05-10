@@ -63,6 +63,7 @@ Evaluate:
 - Would YOU actually listen to this on a commute, or would you skip it?
 - Are there moments of surprise, drama, or "oh wow" that keep attention?
 - Do the hosts have distinct personalities, or do they sound like the same person?
+- Does the ending land naturally? It should feel like a real podcast sign-off, not an abrupt cutoff after the last takeaway
 
 Be TOUGH. A score of 7 means "good enough to publish." A 10 means "I'd share this."
 If it reads like a Wikipedia article with speaker labels, that's a 3.

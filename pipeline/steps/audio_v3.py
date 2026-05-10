@@ -165,11 +165,14 @@ def generate_audio_v3(
         audio_segments.append(segment)
         print(f"    → {len(segment)/1000:.1f}s")
 
-    # Stitch chunks together with a brief crossfade/pause
+    # Stitch chunks together with a brief pause and add a soft landing at the end
     combined = audio_segments[0]
     for segment in audio_segments[1:]:
         # 200ms silence between chunks for natural transition
         combined += AudioSegment.silent(duration=200) + segment
+
+    # Avoid the episode ending on a hard cutoff.
+    combined += AudioSegment.silent(duration=900)
 
     combined.export(str(output_path), format="mp3")
     print(f"  Final audio: {len(combined)/1000:.1f}s → {output_path}")

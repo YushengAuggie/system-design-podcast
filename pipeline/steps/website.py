@@ -94,8 +94,12 @@ def _render_diagram_html(ep_dir: Path, ep_out_dir: Path) -> str:
         if diagram_png.exists():
             shutil.copy2(diagram_png, ep_out_dir / "diagram.png")
         return (
+            '<div class="diagram-header">'
+            '<h2>\U0001f3d7 Architecture Diagram</h2>'
+            '<a href="diagram.html" target="_blank" rel="noopener" class="diagram-fullscreen-link">\u2197 Open full screen</a>'
+            '</div>'
             '<iframe src="diagram.html" '
-            'style="width:100%; height:500px; border:none; border-radius:8px;" '
+            'style="width:100%; height:700px; border:none; border-radius:8px;" '
             'loading="lazy" title="Interactive Architecture Diagram"></iframe>'
         )
 

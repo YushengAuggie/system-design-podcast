@@ -10,7 +10,9 @@ TTS_ENGINE = "elevenlabs-v3"
 
 # ElevenLabs v3 settings (via Poe API)
 ELEVENLABS_V3_MODEL = "ElevenLabs-v3"
-ELEVENLABS_V3_CHAR_LIMIT = 4800  # 5000 hard limit, keep buffer
+# In practice, large v3 requests often become flaky / timeout-y.
+# Use smaller chunks for reliability even though the API allows more.
+ELEVENLABS_V3_CHAR_LIMIT = 2500
 
 # --- Voice Rotation ---
 # ElevenLabs v3 voice pairs (used when TTS_ENGINE = "elevenlabs-v3")

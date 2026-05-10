@@ -66,6 +66,10 @@
 
 **[Host B]:** [One-liner summary / key takeaway]
 
+**[Host A]:** [Natural wrap-up line — e.g. "Alright, that's a wrap on X..."]
+
+**[Host B]:** [Friendly sign-off or teaser for next episode — do NOT end abruptly]
+
 ---
 
 ## References

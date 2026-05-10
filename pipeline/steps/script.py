@@ -36,6 +36,8 @@ Structure Rules:
 - Include all 5 segments with --- dividers between them
 - Keep the script between 750-1500 words of dialogue content
 - Include a References section at the end with real URLs
+- End gracefully: the final 2-4 lines should feel like a natural podcast sign-off, with a clear wrap-up and a friendly closer or teaser for the next episode
+- Do NOT end abruptly on a dry key takeaway; land the episode like real humans finishing a conversation
 - Be specific: use real numbers, real company names, real trade-offs
 - The episode should feel like something you'd genuinely want to listen to on a commute
 """
@@ -53,6 +55,7 @@ Requirements:
 - Word count target: 750-1500 words (dialogue content only)
 - Include all 5 segments: The Problem, Interview Framework, Deep Dive, How They Actually Built It, Interview Tips
 - Include a References section with real engineering blog URLs from the research
+- The ending must have an explicit closing beat: a wrap-up line plus a natural final sign-off/next-episode teaser
 - Make it sound natural and engaging — two hosts having a real conversation
 """
 
@@ -66,6 +69,7 @@ FEEDBACK:
 {feedback}
 
 Keep the same 5-segment structure and Host A/Host B format. Address ALL feedback points.
+Make sure the ending lands naturally with a clear wrap-up and a friendly closing line.
 Target word count: 750-1500 words of dialogue content.
 """
 

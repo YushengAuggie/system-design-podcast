@@ -322,6 +322,16 @@ def run_pipeline(
             # Non-fatal: pipeline still completes
         elif not dry_run:
             print(f"  Video URL: {youtube_result.output}")
+            save_json(
+                ep_dir / "youtube.json",
+                {
+                    "video_id": str(youtube_result.output).split("v=")[-1],
+                    "url": youtube_result.output,
+                    "title": f"System Design: {topic} | S{season:02d}E{episode:02d}",
+                    "privacy": "unlisted",
+                    "voices": f"{voice_pair.get('tts_engine', TTS_ENGINE)} ({voice_pair.get('host_a_voice', '?')} + {voice_pair.get('host_b_voice', '?')})",
+                },
+            )
 
     # --- Step: Podcast RSS Feed ---
     if "podcast" in steps_to_run:
