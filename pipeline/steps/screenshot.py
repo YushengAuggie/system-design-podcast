@@ -1,5 +1,8 @@
 """Step 6c: Screenshot — render diagram.html to PNG via Playwright."""
 
+from __future__ import annotations
+
+
 import shutil
 from pathlib import Path
 

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Pipeline step: Generate a study guide article from the finalized script and research."""
 
 import re

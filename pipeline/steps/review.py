@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Step 3: Script Review — three-agent panel (Fact Checker, Vibe, Engineering Constraints)."""
 
 import re

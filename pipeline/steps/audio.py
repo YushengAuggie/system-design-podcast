@@ -1,5 +1,8 @@
 """Step 5: Audio Generation — convert script to multi-voice MP3 using OpenAI TTS."""
 
+from __future__ import annotations
+
+
 import io
 import re
 import tempfile

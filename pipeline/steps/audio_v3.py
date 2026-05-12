@@ -1,5 +1,8 @@
 """Audio generation using ElevenLabs v3 via Poe API — split, generate, stitch."""
 
+from __future__ import annotations
+
+
 import io
 import os
 import re

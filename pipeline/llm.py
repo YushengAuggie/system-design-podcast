@@ -1,5 +1,8 @@
 """Shared LLM calling utility supporting Poe (OpenAI-compatible) and OpenAI TTS."""
 
+from __future__ import annotations
+
+
 import os
 
 import openai

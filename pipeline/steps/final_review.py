@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Final Review Agent — validates the complete episode output before deployment.
 
 Runs after all generation steps. Goes through a comprehensive checklist to ensure

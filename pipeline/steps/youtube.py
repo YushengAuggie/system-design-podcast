@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Step 7: YouTube Upload — convert MP3 → MP4 and upload to YouTube."""
 
 import os

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Step 6: Diagram Generation — produce interactive HTML architecture diagrams."""
 
 import json

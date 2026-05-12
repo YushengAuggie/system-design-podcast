@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Step 7: Podcast RSS Feed — upload MP3 to GitHub Releases and update RSS feed."""
 
 import json

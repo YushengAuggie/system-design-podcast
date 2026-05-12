@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Configuration constants for the podcast generation pipeline."""
 
 # --- LLM ---

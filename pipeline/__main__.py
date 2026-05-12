@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Entry point for `python -m pipeline`."""
 
 from pathlib import Path

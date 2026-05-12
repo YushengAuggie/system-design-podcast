@@ -1,5 +1,8 @@
 """Step 1: Research — gather talking points and real-world references for a topic."""
 
+from __future__ import annotations
+
+
 import json
 
 from pipeline.config import RESEARCH_MIN_REFERENCES, RESEARCH_MIN_TALKING_POINTS

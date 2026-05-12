@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Step 2: Script Generation — produce a two-host conversational script."""
 
 from pathlib import Path

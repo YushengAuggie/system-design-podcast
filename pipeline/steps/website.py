@@ -1,5 +1,8 @@
 """Step 7: Website Generation — build static HTML pages from episode outputs."""
 
+from __future__ import annotations
+
+
 import html
 import json
 import re

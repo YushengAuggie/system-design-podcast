@@ -1,5 +1,8 @@
 """Step 6b: Diagram Review — validate diagram against research and script content."""
 
+from __future__ import annotations
+
+
 import json
 
 from pipeline.llm import call_anthropic
