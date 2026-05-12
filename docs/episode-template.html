@@ -33,6 +33,7 @@
   <div class="container">
     <a href="../index.html">← All Episodes</a>
     <a href="#player">Listen</a>
+    <a href="#article">Read</a>
     <a href="#diagram">Diagram</a>
     <a href="#transcript">Transcript</a>
     <a href="#references">References</a>
@@ -55,6 +56,22 @@
         </audio>
         <div class="listen-on">
           {{LISTEN_LINKS}}
+        </div>
+      </section>
+
+      <!-- Study Guide -->
+      <section id="article" class="episode-article">
+        <button
+          class="article-toggle"
+          aria-expanded="true"
+          aria-controls="article-body"
+          onclick="this.setAttribute('aria-expanded', this.getAttribute('aria-expanded') === 'true' ? 'false' : 'true'); document.getElementById('article-body').classList.toggle('open');"
+        >
+          <span>📖 Study Guide</span>
+          <span class="chevron">▼</span>
+        </button>
+        <div id="article-body" class="article-content open">
+{{ARTICLE_CONTENT}}
         </div>
       </section>
 

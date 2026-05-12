@@ -162,6 +162,161 @@ def _render_transcript_html(ep_dir: Path) -> str:
     return "\n".join(lines) if lines else "<p>Transcript not available.</p>"
 
 
+# ── Article / Study Guide HTML ────────────────────────────────────────────────
+
+
+def _render_article_html(ep_dir: Path) -> str:
+    """Convert article.md into styled HTML for the study guide section."""
+    article_md = _load_optional_text(ep_dir / "article.md")
+    if not article_md.strip():
+        return '<p style="color:var(--text-dim); font-size:0.9rem;">Study guide coming soon.</p>'
+
+    lines = article_md.split("\n")
+    html_parts: list[str] = []
+    in_table = False
+    in_blockquote = False
+    in_list = False
+    list_type = ""  # "ol" or "ul"
+
+    def _close_list():
+        nonlocal in_list, list_type
+        if in_list:
+            html_parts.append(f"</{list_type}>")
+            in_list = False
+            list_type = ""
+
+    def _close_blockquote():
+        nonlocal in_blockquote
+        if in_blockquote:
+            html_parts.append("</blockquote>")
+            in_blockquote = False
+
+    def _inline_format(text: str) -> str:
+        """Apply inline markdown formatting."""
+        # Bold
+        text = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", text)
+        # Italic
+        text = re.sub(r"\*(.+?)\*", r"<em>\1</em>", text)
+        # Inline code
+        text = re.sub(r"`([^`]+)`", r"<code>\1</code>", text)
+        # Links
+        text = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r'<a href="\2" target="_blank" rel="noopener">\1</a>', text)
+        return text
+
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        stripped = line.strip()
+
+        # Table detection
+        if stripped.startswith("|") and "|" in stripped[1:]:
+            _close_list()
+            _close_blockquote()
+            if not in_table:
+                html_parts.append("<table>")
+                in_table = True
+                # Header row
+                cells = [c.strip() for c in stripped.strip("|").split("|")]
+                html_parts.append("<thead><tr>" + "".join(f"<th>{_inline_format(html.escape(c))}</th>" for c in cells) + "</tr></thead>")
+                # Skip separator row
+                if i + 1 < len(lines) and re.match(r"^\|[\s\-:|]+\|$", lines[i + 1].strip()):
+                    i += 1
+                html_parts.append("<tbody>")
+            else:
+                cells = [c.strip() for c in stripped.strip("|").split("|")]
+                html_parts.append("<tr>" + "".join(f"<td>{_inline_format(html.escape(c))}</td>" for c in cells) + "</tr>")
+            i += 1
+            continue
+        elif in_table:
+            html_parts.append("</tbody></table>")
+            in_table = False
+
+        # Empty line
+        if not stripped:
+            _close_list()
+            _close_blockquote()
+            i += 1
+            continue
+
+        # Headings
+        if stripped.startswith("# ") and not stripped.startswith("## "):
+            _close_list()
+            _close_blockquote()
+            heading_text = html.escape(stripped[2:])
+            html_parts.append(f"<h2>{_inline_format(heading_text)}</h2>")
+            i += 1
+            continue
+
+        if stripped.startswith("## "):
+            _close_list()
+            _close_blockquote()
+            heading_text = html.escape(stripped[3:])
+            html_parts.append(f"<h2>{_inline_format(heading_text)}</h2>")
+            i += 1
+            continue
+
+        # Blockquote
+        if stripped.startswith("> "):
+            _close_list()
+            if not in_blockquote:
+                html_parts.append("<blockquote>")
+                in_blockquote = True
+            quote_text = html.escape(stripped[2:])
+            html_parts.append(f"<p>{_inline_format(quote_text)}</p>")
+            i += 1
+            continue
+
+        # Ordered list
+        ol_match = re.match(r"^(\d+)\.\s+(.+)", stripped)
+        if ol_match:
+            _close_blockquote()
+            if not in_list or list_type != "ol":
+                _close_list()
+                html_parts.append("<ol>")
+                in_list = True
+                list_type = "ol"
+            item_text = html.escape(ol_match.group(2))
+            html_parts.append(f"<li>{_inline_format(item_text)}</li>")
+            i += 1
+            continue
+
+        # Unordered list
+        if stripped.startswith("- ") or stripped.startswith("* "):
+            _close_blockquote()
+            if not in_list or list_type != "ul":
+                _close_list()
+                html_parts.append("<ul>")
+                in_list = True
+                list_type = "ul"
+            item_text = html.escape(stripped[2:])
+            html_parts.append(f"<li>{_inline_format(item_text)}</li>")
+            i += 1
+            continue
+
+        # Horizontal rule
+        if re.match(r"^-{3,}$", stripped) or re.match(r"^\*{3,}$", stripped):
+            _close_list()
+            _close_blockquote()
+            html_parts.append("<hr />")
+            i += 1
+            continue
+
+        # Regular paragraph
+        _close_list()
+        _close_blockquote()
+        para_text = html.escape(stripped)
+        html_parts.append(f"<p>{_inline_format(para_text)}</p>")
+        i += 1
+
+    # Close any open elements
+    if in_table:
+        html_parts.append("</tbody></table>")
+    _close_list()
+    _close_blockquote()
+
+    return "\n".join(html_parts)
+
+
 # ── References HTML ───────────────────────────────────────────────────────────
 
 
@@ -249,6 +404,7 @@ def _render_episode_page(info: dict, website_dir: Path, template: str) -> Path:
     listen_links = _build_listen_links(ep_dir)
 
     diagram_html = _render_diagram_html(ep_dir, ep_out_dir)
+    article_html = _render_article_html(ep_dir)
     transcript_html = _render_transcript_html(ep_dir)
     references_html = _render_references_html(research)
 
@@ -260,6 +416,7 @@ def _render_episode_page(info: dict, website_dir: Path, template: str) -> Path:
     page = page.replace("{{EPISODE}}", str(episode))
     page = page.replace("{{AUDIO_URL}}", audio_url)
     page = page.replace("{{LISTEN_LINKS}}", listen_links)
+    page = page.replace("{{ARTICLE_CONTENT}}", article_html)
     page = page.replace("{{DIAGRAM_CONTENT}}", diagram_html)
     page = page.replace("{{TRANSCRIPT_CONTENT}}", transcript_html)
     page = page.replace("{{REFERENCES_CONTENT}}", references_html)

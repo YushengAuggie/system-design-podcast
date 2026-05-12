@@ -33,6 +33,7 @@
   <div class="container">
     <a href="../index.html">← All Episodes</a>
     <a href="#player">Listen</a>
+    <a href="#article">Read</a>
     <a href="#diagram">Diagram</a>
     <a href="#transcript">Transcript</a>
     <a href="#references">References</a>
@@ -55,6 +56,110 @@
         </audio>
         <div class="listen-on">
           <a href="https://www.youtube.com/watch?v=LG29DDoJE_0" class="listen-btn" target="_blank" rel="noopener">▶ YouTube</a>
+        </div>
+      </section>
+
+      <!-- Study Guide -->
+      <section id="article" class="episode-article">
+        <button
+          class="article-toggle"
+          aria-expanded="true"
+          aria-controls="article-body"
+          onclick="this.setAttribute('aria-expanded', this.getAttribute('aria-expanded') === 'true' ? 'false' : 'true'); document.getElementById('article-body').classList.toggle('open');"
+        >
+          <span>📖 Study Guide</span>
+          <span class="chevron">▼</span>
+        </button>
+        <div id="article-body" class="article-content open">
+
+<h2>Rate Limiter: The Invisible Bouncer Protecting Every API You’ve Ever Used</h2>
+
+<p>Every time you scroll Twitter during the Super Bowl, smash the like button on Instagram, or fire off API calls to Stripe, there’s an invisible system deciding whether you’re allowed to continue. That system is a <strong>rate limiter</strong> — and designing one that’s fast, fair, and fault-tolerant is one of the most practical system design challenges you’ll face.</p>
+
+<h2>Why Rate Limiting Matters</h2>
+
+<p>Rate limiting isn’t just about stopping malicious actors. It’s about <strong>protecting shared resources</strong> from legitimate overuse. A single user with a buggy retry loop can take down your service for everyone. A sudden mobile app reconnection storm can saturate your database. Rate limiting is traffic control for your infrastructure.</p>
+
+<p>The core tension: you want to <strong>block abuse without punishing legitimate bursts</strong>. A user sending 50 cached requests after reconnecting? Probably fine. That same user sustaining 50 requests per second for an hour? That’s a problem.</p>
+
+<h2>The Four Algorithms You Need to Know</h2>
+
+<table>
+<thead>
+<tr><th>Algorithm</th><th>Burst Handling</th><th>Memory</th><th>Precision</th><th>Best For</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Token Bucket</strong></td><td>Excellent</td><td>Low</td><td>Good</td><td>APIs with burst tolerance</td></tr>
+<tr><td><strong>Leaky Bucket</strong></td><td>Smooths output</td><td>Low</td><td>Good</td><td>Steady-rate processing</td></tr>
+<tr><td><strong>Fixed Window</strong></td><td>Poor (boundary exploit)</td><td>Very Low</td><td>Low</td><td>Simple use cases</td></tr>
+<tr><td><strong>Sliding Window</strong></td><td>Good</td><td>Higher</td><td>High</td><td>Fair, accurate limiting</td></tr>
+</tbody>
+</table>
+
+<p><strong>Token Bucket</strong> is the most popular choice. Tokens accumulate at a steady rate (e.g., 10/second) up to a maximum bucket size. Each request costs a token. Bursts are naturally supported — if you’ve been idle, your bucket is full.</p>
+
+<p><strong>Fixed Window</strong> is simple but has a well-known exploit: send 1000 requests at 11:59:59 and another 1000 at 12:00:01 — technically both are within their respective windows, but you just doubled your effective rate.</p>
+
+<p><strong>Sliding Window</strong> fixes this by tracking requests across a rolling time period, but requires more memory per user — you need timestamps, not just counters.</p>
+
+<p><strong>Leaky Bucket</strong> processes requests at a fixed rate regardless of input burst, acting like a queue with constant drain. Great for smoothing traffic to downstream services.</p>
+
+<h2>The Interview Framework</h2>
+
+<p>When you get this in an interview, start here:</p>
+
+<ol>
+<li><strong>Clarify requirements</strong> — Per-user? Per-IP? Per-endpoint? What’s the scale (1K QPS or 100K)?</li>
+<li><strong>Non-functional requirements</strong> — Latency budget (adding 50ms per request is unacceptable), availability requirements, fail-open vs fail-closed policy</li>
+<li><strong>Back-of-envelope math</strong> — 10M users × 8 bytes per counter = 80MB. Fits easily in Redis.</li>
+<li><strong>High-level architecture</strong> — API Gateway → Rate Limit Middleware → Redis counters → Your service</li>
+<li><strong>Deep dive</strong> — Distributed coordination, algorithm choice, failure modes</li>
+</ol>
+
+<blockquote><p><strong>Key insight:</strong> The rate limiter sits on the <em>hot path</em> of every request. Anything you add here multiplies across your entire QPS.</p></blockquote>
+
+<h2>The Distributed Problem</h2>
+
+<p>Here’s where “just use Redis” stops being a complete answer. With multiple API servers, you need coordination:</p>
+
+<p><strong>Centralized (Redis):</strong> All servers check/increment the same counter. Atomic operations (<code>INCR</code> + <code>EXPIRE</code>, or Lua scripts) prevent race conditions. Trade-off: every request adds a network hop to Redis.</p>
+
+<p><strong>Local + Periodic Sync:</strong> Each server counts locally and syncs to a central store periodically. Lower latency, but you lose precision — a user could exceed limits by hitting different servers before sync occurs.</p>
+
+<p><strong>Batched Updates:</strong> Buffer several requests worth of counter increments and flush them in batches. Reduces Redis load but introduces a small accuracy window.</p>
+
+<p>The <strong>thundering herd</strong> is real: 100 servers simultaneously incrementing the same Redis key during a traffic spike. Solutions include request coalescing, Redis clustering, and client-side jitter.</p>
+
+<h2>Fail-Open vs Fail-Closed</h2>
+
+<p>When your rate limiting infrastructure goes down:</p>
+
+<ul>
+<li><strong>Fail-open:</strong> Allow all requests through. Preserves availability but removes protection. Most companies choose this — a brief period without rate limiting is better than dropping all traffic.</li>
+<li><strong>Fail-closed:</strong> Reject all requests. Safer against attacks but causes an outage for legitimate users.</li>
+</ul>
+
+<p>The pragmatic approach: fail-open with local fallback counters and circuit breakers. If Redis is unreachable, apply conservative in-memory limits until connectivity recovers.</p>
+
+<h2>How the Big Players Built It</h2>
+
+<p><strong>Stripe</strong> uses Redis with sliding window counters and Lua scripts for atomicity. They batch operations and handle billions of API requests with sub-millisecond latency overhead. Their multi-tier approach applies different limits at the API key, IP, and account levels simultaneously.</p>
+
+<p><strong>Cloudflare</strong> does rate limiting at the edge network level — blocking bad traffic before it reaches your origin servers. It’s like having bouncers at every entrance to the city, not just your building.</p>
+
+<p><strong>GitHub</strong> evolved from simple counters to sophisticated abuse detection. They use a sharded, replicated rate limiter in Redis that differentiates between authenticated and unauthenticated requests, with different limits per endpoint category.</p>
+
+<h2>Key Takeaways</h2>
+
+<ol>
+<li><strong>Algorithm choice depends on your burst tolerance</strong> — Token bucket for most APIs, sliding window when fairness is critical</li>
+<li><strong>Distributed coordination is the hard part</strong> — Not the algorithm itself</li>
+<li><strong>Monitor your false positive rate</strong> — If legitimate users are getting rate limited, your thresholds are wrong</li>
+<li><strong>Design for failure</strong> — Your rate limiter will go down; decide what happens when it does</li>
+<li><strong>Layer your defenses</strong> — Edge-level, application-level, and database-level limits each catch different problems</li>
+<li><strong>Don’t add latency to the hot path</strong> — Async updates, batching, and local caches are your friends</li>
+</ol>
+
         </div>
       </section>
 
