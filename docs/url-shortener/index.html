@@ -33,6 +33,7 @@
   <div class="container">
     <a href="../index.html">← All Episodes</a>
     <a href="#player">Listen</a>
+    <a href="#article">Read</a>
     <a href="#diagram">Diagram</a>
     <a href="#transcript">Transcript</a>
     <a href="#references">References</a>
@@ -55,6 +56,80 @@
         </audio>
         <div class="listen-on">
           <a href="https://www.youtube.com/watch?v=V15DxURkoe4" class="listen-btn" target="_blank" rel="noopener">▶ YouTube</a>
+        </div>
+      </section>
+
+      <!-- Study Guide -->
+      <section id="article" class="episode-article">
+        <button
+          class="article-toggle"
+          aria-expanded="true"
+          aria-controls="article-body"
+          onclick="this.setAttribute('aria-expanded', this.getAttribute('aria-expanded') === 'true' ? 'false' : 'true'); document.getElementById('article-body').classList.toggle('open');"
+        >
+          <span>📖 Study Guide</span>
+          <span class="chevron">▼</span>
+        </button>
+        <p class="article-subtitle">A concise written overview — no audio required</p>
+        <div id="article-body" class="article-content open">
+<h2>URL Shortener: The &quot;Simple&quot; System That&#x27;s Anything But</h2>
+<p>Everyone thinks a URL shortener is the &quot;Hello World&quot; of system design interviews. Hash a URL, store the mapping, redirect on lookup — done, right? Not even close. Bitly handles 600 million clicks per month. TinyURL processes millions of URLs daily. When you dig in, you&#x27;re designing a globally distributed, read-heavy, analytics-powered system that needs to respond in single-digit milliseconds.</p>
+<h2>Why It&#x27;s Harder Than It Looks</h2>
+<p>The core challenge is the <strong>traffic pattern</strong>. For every URL you shorten, it might get clicked 100 times. That means you&#x27;re building a system that&#x27;s 99% reads — but still needs to handle millions of writes per day. Add analytics (clicks by country, device, time), abuse prevention, and global latency requirements, and your &quot;simple&quot; project is suddenly a real engineering challenge.</p>
+<p><strong>Quick math at scale:</strong> 100M URLs shortened daily × 100 clicks each = 10 billion redirects/day. That&#x27;s ~115,000 reads per second and 1,200 writes per second. Storage for 5 years? About 90TB just for URL mappings.</p>
+<h2>The Encoding Problem: How to Generate Short Codes</h2>
+<p>This is where most candidates stumble. Here are your options:</p>
+<table>
+<thead><tr><th>Approach</th><th>Pros</th><th>Cons</th><th>Verdict</th></tr></thead>
+<tbody>
+<tr><td><strong>MD5/SHA + Truncate</strong></td><td>Simple</td><td>Unpredictable collisions, no fix without retry</td><td>❌ Avoid</td></tr>
+<tr><td><strong>Auto-increment Counter</strong></td><td>No collisions, simple</td><td>Predictable (scraping risk), single point of failure</td><td>⚠️ Risky alone</td></tr>
+<tr><td><strong>Base62 + Counter</strong></td><td>Compact, no collisions</td><td>Still predictable unless shuffled</td><td>✅ With randomization</td></tr>
+<tr><td><strong>Snowflake-style ID</strong></td><td>Unique, distributed, not predictable</td><td>More complex, longer codes</td><td>✅ Best at scale</td></tr>
+</tbody></table>
+<p><strong>The Instagram approach</strong> is elegant: combine a timestamp, machine ID, and sequence number, then base62 encode the whole thing. You get uniqueness without a single point of coordination, and the codes aren&#x27;t predictable enough to scrape.</p>
+<blockquote>
+<p><strong>Key insight:</strong> Hashing is a trap. You can&#x27;t efficiently detect or resolve collisions at scale. Counter-based approaches with distributed coordination (like Snowflake IDs) are what production systems actually use.</p>
+</blockquote>
+<h2>The Interview Framework</h2>
+<p>When you get this question, follow this path:</p>
+<ol>
+<li><strong>Functional requirements</strong> — Shorten URLs, redirect (301 vs 302?), custom aliases, expiration, analytics</li>
+<li><strong>Scale estimation</strong> — Write QPS, read QPS, storage over N years, bandwidth</li>
+<li><strong>High-level architecture</strong> — Load balancer → Web servers → Encoding service → Database + Cache</li>
+<li><strong>Deep dive on encoding</strong> — How to generate short codes without collisions</li>
+<li><strong>Caching strategy</strong> — The 100:1 read ratio demands aggressive caching</li>
+<li><strong>Extensions</strong> — Analytics, rate limiting, geographic distribution</li>
+</ol>
+<p>The 301 vs 302 redirect choice matters more than you&#x27;d think: 301 (permanent) is better for SEO but makes analytics harder because browsers cache it. 302 (temporary) ensures every click hits your server — critical for accurate tracking.</p>
+<h2>Caching: Your Most Important Decision</h2>
+<p>With a 100:1 read-to-write ratio, your caching layer is arguably more important than your database choice. The pattern is straightforward:</p>
+<p><strong>Read path:</strong> Check cache → hit? redirect immediately. Miss? query DB → populate cache → redirect.</p>
+<p><strong>What to cache:</strong> The top 20% of URLs (by popularity) will cover 80%+ of your traffic. Use an LRU eviction policy with TTLs. A few hundred GB of Redis handles billions of active mappings.</p>
+<p><strong>Cache invalidation:</strong> Mostly a non-issue for URL shorteners — mappings rarely change. Expired URLs get evicted naturally. This is one of the rare systems where caching is simple because the data is essentially immutable.</p>
+<h2>Database Design: SQL vs NoSQL</h2>
+<p>For the URL mapping itself (short_code → long_url), you need:</p>
+<ul>
+<li>Fast point lookups by short_code (the redirect hot path)</li>
+<li>Fast writes when creating new URLs</li>
+<li>Horizontal scalability to billions of rows</li>
+</ul>
+<p><strong>NoSQL (DynamoDB, Cassandra)</strong> is the natural fit: key-value lookups are the primary access pattern, and sharding by short_code distributes load evenly. No joins needed.</p>
+<p><strong>SQL (MySQL, PostgreSQL)</strong> works too with proper indexing and sharding, especially if you want ACID guarantees for deduplication or custom alias reservation.</p>
+<p><strong>Sharding strategy:</strong> Hash the short_code to determine the shard. Since codes are already pseudo-random (if using Snowflake-style IDs), you get even distribution for free.</p>
+<h2>Real-World Implementations</h2>
+<p><strong>Bitly</strong> evolved from a single MySQL instance to a distributed architecture. Their key insight: separate the write path (URL creation) from the read path (redirects) entirely. Writes go to a primary database; reads are served from replicas and cache.</p>
+<p><strong>TinyURL</strong> kept it simple — a focused architecture that proves you don&#x27;t always need microservices. Their success shows that a well-tuned monolith with good caching can handle enormous scale.</p>
+<p><strong>Instagram&#x27;s ID generation</strong> solved the distributed uniqueness problem without coordination: each shard generates its own IDs using (timestamp, shard_id, sequence). This pattern is directly applicable to URL shortener code generation.</p>
+<h2>Key Takeaways</h2>
+<ol>
+<li><strong>It&#x27;s a read-heavy system</strong> — Design for the 100:1 ratio from day one. Cache aggressively.</li>
+<li><strong>Don&#x27;t hash for short codes</strong> — Use counter-based or Snowflake-style distributed ID generation</li>
+<li><strong>301 vs 302 is a product decision</strong> — Analytics needs vs SEO benefits</li>
+<li><strong>Separate read and write paths</strong> — They have completely different scale characteristics</li>
+<li><strong>Caching is your biggest lever</strong> — A few hundred GB of Redis eliminates most database load</li>
+<li><strong>Shard by short_code</strong> — Even distribution, fast lookups, scales horizontally</li>
+</ol>
         </div>
       </section>
 
@@ -199,5 +274,30 @@
   </div>
 </footer>
 
+<script>
+// Scroll-spy: highlight active nav link
+(function() {
+  const nav = document.querySelector('.site-nav');
+  if (!nav) return;
+  const links = nav.querySelectorAll('a[href^="#"]');
+  const sections = [];
+  links.forEach(link => {
+    const id = link.getAttribute('href').slice(1);
+    const el = document.getElementById(id);
+    if (el) sections.push({ el, link });
+  });
+  function onScroll() {
+    const y = window.scrollY + 80;
+    let current = null;
+    sections.forEach(s => {
+      if (s.el.offsetTop <= y) current = s;
+    });
+    links.forEach(l => l.classList.remove('active'));
+    if (current) current.link.classList.add('active');
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+})();
+</script>
 </body>
 </html>
