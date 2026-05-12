@@ -70,6 +70,7 @@
           <span>📖 Study Guide</span>
           <span class="chevron">▼</span>
         </button>
+        <p class="article-subtitle">A concise written overview — no audio required</p>
         <div id="article-body" class="article-content open">
 
 <h2>Rate Limiter: The Invisible Bouncer Protecting Every API You’ve Ever Used</h2>
@@ -289,5 +290,30 @@
   </div>
 </footer>
 
+<script>
+// Scroll-spy: highlight active nav link
+(function() {
+  const nav = document.querySelector('.site-nav');
+  if (!nav) return;
+  const links = nav.querySelectorAll('a[href^="#"]');
+  const sections = [];
+  links.forEach(link => {
+    const id = link.getAttribute('href').slice(1);
+    const el = document.getElementById(id);
+    if (el) sections.push({ el, link });
+  });
+  function onScroll() {
+    const y = window.scrollY + 80;
+    let current = null;
+    sections.forEach(s => {
+      if (s.el.offsetTop <= y) current = s;
+    });
+    links.forEach(l => l.classList.remove('active'));
+    if (current) current.link.classList.add('active');
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+})();
+</script>
 </body>
 </html>
