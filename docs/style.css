@@ -1124,6 +1124,45 @@ section {
   font-size: 0.88rem;
 }
 
+/* ── Language Toggle Tabs ── */
+.lang-tabs {
+  display: flex;
+  gap: 0;
+  padding: 0 28px;
+  border-bottom: 1px solid var(--border);
+}
+
+.lang-tab {
+  padding: 10px 20px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: color var(--transition), border-color var(--transition);
+  letter-spacing: 0.02em;
+}
+
+.lang-tab:hover {
+  color: var(--text);
+}
+
+.lang-tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.lang-content {
+  display: none;
+}
+
+.lang-content.active {
+  display: block;
+}
+
 /* ── Responsive ── */
 @media (max-width: 800px) {
   .about-grid { grid-template-columns: 1fr; gap: 32px; }

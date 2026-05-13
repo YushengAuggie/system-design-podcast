@@ -168,9 +168,9 @@ def _render_transcript_html(ep_dir: Path) -> str:
 # ── Article / Study Guide HTML ────────────────────────────────────────────────
 
 
-def _render_article_html(ep_dir: Path) -> str:
+def _render_article_html(ep_dir: Path, filename: str = "article.md") -> str:
     """Convert article.md into styled HTML for the study guide section."""
-    article_md = _load_optional_text(ep_dir / "article.md")
+    article_md = _load_optional_text(ep_dir / filename)
     if not article_md.strip():
         return '<p style="color:var(--text-dim); font-size:0.9rem;">Study guide coming soon.</p>'
 
@@ -408,6 +408,7 @@ def _render_episode_page(info: dict, website_dir: Path, template: str) -> Path:
 
     diagram_html = _render_diagram_html(ep_dir, ep_out_dir)
     article_html = _render_article_html(ep_dir)
+    article_html_zh = _render_article_html(ep_dir, filename="article_zh.md")
     transcript_html = _render_transcript_html(ep_dir)
     references_html = _render_references_html(research)
 
@@ -420,6 +421,7 @@ def _render_episode_page(info: dict, website_dir: Path, template: str) -> Path:
     page = page.replace("{{AUDIO_URL}}", audio_url)
     page = page.replace("{{LISTEN_LINKS}}", listen_links)
     page = page.replace("{{ARTICLE_CONTENT}}", article_html)
+    page = page.replace("{{ARTICLE_CONTENT_ZH}}", article_html_zh)
     page = page.replace("{{DIAGRAM_CONTENT}}", diagram_html)
     page = page.replace("{{TRANSCRIPT_CONTENT}}", transcript_html)
     page = page.replace("{{REFERENCES_CONTENT}}", references_html)

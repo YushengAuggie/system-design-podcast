@@ -71,7 +71,12 @@
           <span class="chevron">▼</span>
         </button>
         <p class="article-subtitle">A concise written overview — no audio required</p>
+        <div class="lang-tabs">
+          <button class="lang-tab active" data-lang="en" onclick="switchLang(this, 'en')">English</button>
+          <button class="lang-tab" data-lang="zh" onclick="switchLang(this, 'zh')">中文</button>
+        </div>
         <div id="article-body" class="article-content open">
+          <div class="lang-content active" data-lang="en">
 <h2>URL Shortener: The &quot;Simple&quot; System That&#x27;s Anything But</h2>
 <p>Everyone thinks a URL shortener is the &quot;Hello World&quot; of system design interviews. Hash a URL, store the mapping, redirect on lookup — done, right? Not even close. Bitly handles 600 million clicks per month. TinyURL processes millions of URLs daily. When you dig in, you&#x27;re designing a globally distributed, read-heavy, analytics-powered system that needs to respond in single-digit milliseconds.</p>
 <h2>Why It&#x27;s Harder Than It Looks</h2>
@@ -130,6 +135,67 @@
 <li><strong>Caching is your biggest lever</strong> — A few hundred GB of Redis eliminates most database load</li>
 <li><strong>Shard by short_code</strong> — Even distribution, fast lookups, scales horizontally</li>
 </ol>
+          </div>
+          <div class="lang-content" data-lang="zh">
+<h2>URL Shortener：看似简单，实则不然</h2>
+<p>很多人觉得 URL Shortener 就是系统设计面试里的 &quot;Hello World&quot;。哈希一下 URL，存个映射，查到了就重定向——搞定了？远不止如此。Bitly 每月处理 6 亿次点击，TinyURL 每天处理数百万条 URL。深入一看，你其实在设计一个全球分布式、读密集型、带分析能力的系统，而且要求毫秒级响应。</p>
+<h2>为什么比想象中难</h2>
+<p>核心挑战在于<strong>流量模式</strong>。每缩短一条 URL，它可能会被点击 100 次。这意味着你要构建一个 99% 都是读的系统——但每天仍然要处理数百万次写入。再加上分析（按国家、设备、时间统计点击量）、防滥用和全球低延迟要求，你的 &quot;简单&quot; 项目瞬间变成了一个真正的工程挑战。</p>
+<p><strong>规模速算：</strong> 每日 1 亿条 URL 缩短 × 每条 100 次点击 = 每天 100 亿次重定向。相当于约 115,000 次读/秒和 1,200 次写/秒。存储 5 年？仅 URL 映射就约 90TB。</p>
+<h2>编码问题：如何生成短码</h2>
+<p>这是大多数候选人卡壳的地方。你的选项如下：</p>
+<table>
+<thead><tr><th>方案</th><th>优点</th><th>缺点</th><th>结论</th></tr></thead>
+<tbody>
+<tr><td><strong>MD5/SHA + 截断</strong></td><td>简单</td><td>碰撞不可预测，除了重试没有修复手段</td><td>❌ 避免</td></tr>
+<tr><td><strong>自增计数器</strong></td><td>无碰撞，简单</td><td>可预测（爬虫风险），单点故障</td><td>⚠️ 单独使用有风险</td></tr>
+<tr><td><strong>Base62 + 计数器</strong></td><td>紧凑，无碰撞</td><td>不做混淆则仍可预测</td><td>✅ 配合随机化使用</td></tr>
+<tr><td><strong>Snowflake 式 ID</strong></td><td>唯一、分布式、不可预测</td><td>更复杂，码更长</td><td>✅ 大规模最佳选择</td></tr>
+</tbody></table>
+<p><strong>Instagram 的方案</strong>很优雅：将时间戳、机器 ID 和序列号组合，然后对整体做 Base62 编码。你无需单点协调就能获得唯一性，而且码不容易被预测到可以批量爬取。</p>
+<blockquote>
+<p><strong>关键洞察：</strong> 哈希是个陷阱。在大规模下你无法高效检测或解决碰撞。基于计数器加分布式协调（如 Snowflake ID）的方案才是生产系统实际使用的方式。</p>
+</blockquote>
+<h2>面试框架</h2>
+<p>当你遇到这个题时，按这个路径走：</p>
+<ol>
+<li><strong>功能需求</strong> — 缩短 URL、重定向（301 还是 302？）、自定义别名、过期机制、分析</li>
+<li><strong>规模估算</strong> — 写 QPS、读 QPS、N 年的存储量、带宽</li>
+<li><strong>高层架构</strong> — 负载均衡 → Web 服务器 → 编码服务 → 数据库 + 缓存</li>
+<li><strong>深入编码方案</strong> — 如何无碰撞地生成短码</li>
+<li><strong>缓存策略</strong> — 100:1 的读比率要求激进缓存</li>
+<li><strong>扩展</strong> — 分析、限流、地理分布</li>
+</ol>
+<p>301 vs 302 重定向的选择比你想的重要：301（永久）对 SEO 更好，但浏览器会缓存，导致分析数据不准。302（临时）确保每次点击都到达你的服务器——对精确追踪至关重要。</p>
+<h2>缓存：你最重要的决策</h2>
+<p>100:1 的读写比意味着你的缓存层可以说比数据库选型更重要。模式很直接：</p>
+<p><strong>读路径：</strong> 查缓存 → 命中？直接重定向。未命中？查 DB → 填充缓存 → 重定向。</p>
+<p><strong>缓存什么：</strong> 热度 top 20% 的 URL 会覆盖 80%+ 的流量。使用带 TTL 的 LRU 淘汰策略。几百 GB 的 Redis 就能处理数十亿条活跃映射。</p>
+<p><strong>缓存失效：</strong> 对 URL Shortener 来说基本不是问题——映射几乎不变。过期的 URL 自然被淘汰。这是少数缓存很简单的系统之一，因为数据本质上是不可变的。</p>
+<h2>数据库设计：SQL vs NoSQL</h2>
+<p>对于 URL 映射本身（short_code → long_url），你需要：</p>
+<ul>
+<li>按 short_code 快速点查（重定向热路径）</li>
+<li>创建新 URL 时的快速写入</li>
+<li>水平扩展到数十亿行</li>
+</ul>
+<p><strong>NoSQL（DynamoDB、Cassandra）</strong> 是天然之选：主要访问模式就是键值查询，按 short_code 分片可以均匀分配负载。不需要 join。</p>
+<p><strong>SQL（MySQL、PostgreSQL）</strong> 在适当索引和分片下也可以工作，尤其当你需要 ACID 保证来做去重或自定义别名预留时。</p>
+<p><strong>分片策略：</strong> 对 short_code 做哈希来确定分片。如果使用 Snowflake 式 ID，码本身已经是伪随机的，自然获得均匀分布。</p>
+<h2>真实案例</h2>
+<p><strong>Bitly</strong> 从单台 MySQL 实例演进到分布式架构。他们的关键洞察：将写路径（URL 创建）和读路径（重定向）完全分离。写入到主库；读取由副本和缓存提供服务。</p>
+<p><strong>TinyURL</strong> 保持简单——一个专注的架构证明了你并不总需要微服务。他们的成功表明，一个调优良好的单体配合优秀的缓存可以处理巨大的规模。</p>
+<p><strong>Instagram 的 ID 生成</strong> 在无需协调的情况下解决了分布式唯一性问题：每个分片使用（时间戳、shard_id、序列号）生成自己的 ID。这个模式直接适用于 URL Shortener 的短码生成。</p>
+<h2>核心要点</h2>
+<ol>
+<li><strong>这是一个读密集系统</strong> — 从一开始就为 100:1 的比率设计。激进缓存。</li>
+<li><strong>不要用哈希来生成短码</strong> — 使用基于计数器或 Snowflake 式的分布式 ID 生成</li>
+<li><strong>301 vs 302 是产品决策</strong> — 分析需求 vs SEO 收益</li>
+<li><strong>分离读写路径</strong> — 它们有完全不同的规模特征</li>
+<li><strong>缓存是你最大的杠杆</strong> — 几百 GB 的 Redis 就能消除大部分数据库负载</li>
+<li><strong>按 short_code 分片</strong> — 均匀分布、快速查询、水平扩展</li>
+</ol>
+          </div>
         </div>
       </section>
 
@@ -298,6 +364,15 @@
   window.addEventListener('scroll', onScroll, { passive: true });
   onScroll();
 })();
+
+// Language toggle for study guide
+function switchLang(btn, lang) {
+  const section = btn.closest('.episode-article');
+  section.querySelectorAll('.lang-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  section.querySelectorAll('.lang-content').forEach(c => c.classList.remove('active'));
+  section.querySelector('.lang-content[data-lang="' + lang + '"]').classList.add('active');
+}
 </script>
 </body>
 </html>
