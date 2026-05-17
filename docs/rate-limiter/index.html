@@ -55,7 +55,7 @@
           Your browser does not support the audio element.
         </audio>
         <div class="listen-on">
-          <a href="https://www.youtube.com/watch?v=LG29DDoJE_0" class="listen-btn" target="_blank" rel="noopener">▶ YouTube</a>
+          <a href="https://www.youtube.com/watch?v=ocyf5_H1UZQ" class="listen-btn" target="_blank" rel="noopener">▶ YouTube</a>
         </div>
       </section>
 
@@ -135,7 +135,62 @@
 </ol>
           </div>
           <div class="lang-content" data-lang="zh">
-<p style="color:var(--text-dim); font-size:0.9rem;">Study guide coming soon.</p>
+<h2>Rate Limiter：保护你用过的每个 API 的隐形保安</h2>
+<p>每当你在超级碗期间刷 Twitter，在 Instagram 上疯狂点赞，或者向 Stripe 发起 API 调用时，都有一个隐形系统在决定是否允许你继续操作。这个系统就是 <strong>rate limiter</strong>——设计一个快速、公平且容错的 rate limiter 是你会遇到的最实用的系统设计挑战之一。</p>
+<h2>为什么 Rate Limiting 很重要</h2>
+<p>Rate limiting 不仅仅是为了阻止恶意行为者，它是为了<strong>保护共享资源</strong>免受合法的过度使用。一个有 bug 的重试循环就能让你的服务对所有人都不可用。移动应用的突然重连风暴可能会让你的数据库饱和。Rate limiting 就是你基础设施的交通管制。</p>
+<p>核心矛盾在于：你想要<strong>阻止滥用而不惩罚合法的突发流量</strong>。用户重连后发送 50 个缓存请求？可能没问题。同一个用户持续一小时每秒发送 50 个请求？那就有问题了。</p>
+<h2>你需要了解的四种算法</h2>
+<table>
+<thead><tr><th>算法</th><th>突发处理</th><th>内存占用</th><th>精度</th><th>最适合场景</th></tr></thead>
+<tbody>
+<tr><td><strong>Token Bucket</strong></td><td>优秀</td><td>低</td><td>好</td><td>能容忍突发的 API</td></tr>
+<tr><td><strong>Leaky Bucket</strong></td><td>平滑输出</td><td>低</td><td>好</td><td>稳定速率处理</td></tr>
+<tr><td><strong>Fixed Window</strong></td><td>差（边界利用）</td><td>很低</td><td>低</td><td>简单用例</td></tr>
+<tr><td><strong>Sliding Window</strong></td><td>好</td><td>较高</td><td>高</td><td>公平、准确的限制</td></tr>
+</tbody></table>
+<p><strong>Token Bucket</strong> 是最受欢迎的选择。Token 以稳定速率累积（比如每秒 10 个）直到达到最大桶容量。每个请求消耗一个 token。天然支持突发——如果你一直空闲，你的桶就是满的。</p>
+<p><strong>Fixed Window</strong> 简单但有个众所周知的漏洞：在 11:59:59 发送 1000 个请求，在 12:00:01 再发送 1000 个——技术上都在各自的窗口内，但你实际上把有效速率翻了一倍。</p>
+<p><strong>Sliding Window</strong> 通过跟踪滚动时间段内的请求来修复这个问题，但每个用户需要更多内存——你需要时间戳，而不仅仅是计数器。</p>
+<p><strong>Leaky Bucket</strong> 无论输入突发如何，都以固定速率处理请求，就像一个恒定排水的队列。非常适合平滑到下游服务的流量。</p>
+<h2>面试框架</h2>
+<p>当你在面试中遇到这个问题时，从这里开始：</p>
+<ol>
+<li><strong>明确需求</strong> — 按用户？按 IP？按端点？规模是多少（1K QPS 还是 100K）？</li>
+<li><strong>非功能性需求</strong> — 延迟预算（每个请求增加 50ms 是不可接受的）、可用性要求、fail-open vs fail-closed 策略</li>
+<li><strong>粗略计算</strong> — 1000 万用户 × 每个计数器 8 字节 = 80MB。轻松放入 Redis。</li>
+<li><strong>高层架构</strong> — API Gateway → Rate Limit Middleware → Redis 计数器 → 你的服务</li>
+<li><strong>深入探讨</strong> — 分布式协调、算法选择、故障模式</li>
+</ol>
+<blockquote>
+<p><strong>关键洞察：</strong> Rate limiter 位于每个请求的<em>热路径</em>上。你在这里添加的任何东西都会在整个 QPS 上成倍放大。</p>
+</blockquote>
+<h2>分布式问题</h2>
+<p>这里&quot;直接用 Redis&quot;不再是完整答案。有了多个 API 服务器，你需要协调：</p>
+<p><strong>中心化（Redis）：</strong> 所有服务器检查/递增同一个计数器。原子操作（INCR + EXPIRE，或 Lua 脚本）防止竞态条件。权衡：每个请求都要增加到 Redis 的网络跳数。</p>
+<p><strong>本地 + 定期同步：</strong> 每个服务器本地计数并定期同步到中央存储。延迟更低，但失去精度——用户可能在同步发生前通过访问不同服务器超出限制。</p>
+<p><strong>批量更新：</strong> 缓冲几个请求的计数器递增并批量刷新。减少 Redis 负载但引入小的准确性窗口。</p>
+<p><strong>Thundering herd</strong> 是真实存在的：100 个服务器在流量高峰期同时递增同一个 Redis key。解决方案包括请求合并、Redis 集群和客户端抖动。</p>
+<h2>Fail-Open vs Fail-Closed</h2>
+<p>当你的 rate limiting 基础设施宕机时：</p>
+<ul>
+<li><strong>Fail-open：</strong> 允许所有请求通过。保持可用性但移除保护。大多数公司选择这个——短暂没有 rate limiting 比丢弃所有流量要好。</li>
+<li><strong>Fail-closed：</strong> 拒绝所有请求。对攻击更安全但对合法用户造成中断。</li>
+</ul>
+<p>实用方法：fail-open 配合本地回退计数器和熔断器。如果 Redis 不可达，应用保守的内存限制直到连接恢复。</p>
+<h2>大公司是怎么构建的</h2>
+<p><strong>Stripe</strong> 使用 Redis 配合 sliding window 计数器和 Lua 脚本保证原子性。他们批量操作并处理数十亿 API 请求，延迟开销在亚毫秒级。他们的多层方法同时在 API key、IP 和账户级别应用不同限制。</p>
+<p><strong>Cloudflare</strong> 在边缘网络级别做 rate limiting——在坏流量到达你的源服务器之前就阻止它。就像在城市的每个入口都有保安，而不仅仅是你的建筑。</p>
+<p><strong>GitHub</strong> 从简单计数器演进到复杂的滥用检测。他们使用分片、复制的 Redis rate limiter，区分认证和未认证请求，每个端点类别有不同限制。</p>
+<h2>关键要点</h2>
+<ol>
+<li><strong>算法选择取决于你的突发容忍度</strong> — 大多数 API 用 Token bucket，公平性关键时用 sliding window</li>
+<li><strong>分布式协调是难点</strong> — 不是算法本身</li>
+<li><strong>监控你的误报率</strong> — 如果合法用户被 rate limit，你的阈值就错了</li>
+<li><strong>为故障而设计</strong> — 你的 rate limiter 会宕机；决定它宕机时会发生什么</li>
+<li><strong>分层防御</strong> — 边缘级、应用级和数据库级限制各自捕获不同问题</li>
+<li><strong>不要给热路径增加延迟</strong> — 异步更新、批处理和本地缓存是你的朋友</li>
+</ol>
           </div>
         </div>
       </section>
@@ -157,9 +212,9 @@
           <span class="chevron">▼</span>
         </button>
         <div id="transcript-body" class="transcript-content">
-<h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--warm-brown); margin:20px 0 10px;">Metadata</h3>
-<hr style="border:none; border-top:1px solid var(--light-tan); margin:16px 0;" />
-<h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--warm-brown); margin:20px 0 10px;">Segment 1: The Problem (~2 min)</h3>
+<h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#a78bfa; margin:20px 0 10px;">Metadata</h3>
+<hr style="border:none; border-top:1px solid rgba(255,255,255,0.1); margin:16px 0;" />
+<h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#a78bfa; margin:20px 0 10px;">Segment 1: The Problem (~2 min)</h3>
 <p class="host-line host-a"><span class="host-label">Alex</span> Welcome back to Byte by Design! I&#x27;m here with my co-host who definitely tried to DOS our coffee machine this morning...</p>
 <p class="host-line host-b"><span class="host-label">Blake</span> Hey! I just wanted my caffeine fix. But speaking of DOS attacks, today we&#x27;re talking rate limiters — basically the bouncer at the club of your API.</p>
 <p class="host-line host-a"><span class="host-label">Alex</span> *laughs* That&#x27;s... actually not a terrible analogy. You know what&#x27;s wild? Every time you hit &quot;like&quot; on Instagram or send a tweet, there&#x27;s this invisible system deciding whether you&#x27;re being too spammy.</p>
@@ -167,8 +222,8 @@
 <p class="host-line host-a"><span class="host-label">Alex</span> Exactly! And here&#x27;s the thing — it&#x27;s not just about stopping spam. When you&#x27;re handling millions of requests per second like Twitter during the Super Bowl, you need rate limiting to prevent your entire system from melting down. One user with a buggy script shouldn&#x27;t be able to take down your API for everyone else.</p>
 <p class="host-line host-b"><span class="host-label">Blake</span> Oh that&#x27;s nasty. So it&#x27;s like... traffic control for your servers?</p>
 <p class="host-line host-a"><span class="host-label">Alex</span> Perfect analogy. But here&#x27;s where it gets tricky — you need to be fair but also handle legitimate bursts. Like, if someone&#x27;s mobile app reconnects and sends 50 cached requests at once, that&#x27;s probably okay. But 50 requests per second for an hour? That&#x27;s suspicious.</p>
-<hr style="border:none; border-top:1px solid var(--light-tan); margin:16px 0;" />
-<h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--warm-brown); margin:20px 0 10px;">Segment 2: Interview Framework (~3 min)</h3>
+<hr style="border:none; border-top:1px solid rgba(255,255,255,0.1); margin:16px 0;" />
+<h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#a78bfa; margin:20px 0 10px;">Segment 2: Interview Framework (~3 min)</h3>
 <p class="host-line host-a"><span class="host-label">Alex</span> So if you got this in an interview, where do you start?</p>
 <p class="host-line host-b"><span class="host-label">Blake</span> Okay, requirements gathering time. Functional requirements — we need to limit requests per user, return proper error codes when limits are hit, and... handle different rate limits for different endpoints?</p>
 <p class="host-line host-a"><span class="host-label">Alex</span> Good start! Don&#x27;t forget about non-functional stuff. What&#x27;s our scale? Are we talking 1000 requests per second or 100,000? Latency matters too — adding 50ms to every request for rate limiting is not gonna fly.</p>
@@ -178,8 +233,8 @@
 <p class="host-line host-a"><span class="host-label">Alex</span> Nice! High-level architecture — API gateway with rate limiting middleware, Redis for counter storage, and probably some async processing for non-critical updates. The key is keeping the hot path fast.</p>
 <p class="host-line host-b"><span class="host-label">Blake</span> Wait, but what about distributed systems? If I have multiple API servers, they all need to coordinate on these limits, right?</p>
 <p class="host-line host-a"><span class="host-label">Alex</span> *laughs* And there&#x27;s the million-dollar question! That&#x27;s where things get spicy.</p>
-<hr style="border:none; border-top:1px solid var(--light-tan); margin:16px 0;" />
-<h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--warm-brown); margin:20px 0 10px;">Segment 3: Deep Dive (~3 min)</h3>
+<hr style="border:none; border-top:1px solid rgba(255,255,255,0.1); margin:16px 0;" />
+<h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#a78bfa; margin:20px 0 10px;">Segment 3: Deep Dive (~3 min)</h3>
 <p class="host-line host-a"><span class="host-label">Alex</span> Okay, now let&#x27;s get into the hard parts. First big decision — which algorithm? Token bucket, sliding window, fixed window, or leaky bucket?</p>
 <p class="host-line host-b"><span class="host-label">Blake</span> I always get these confused. Token bucket is like... you get tokens at a steady rate and spend them on requests?</p>
 <p class="host-line host-a"><span class="host-label">Alex</span> Exactly! It&#x27;s great for handling bursts — you can save up tokens and then spend them all at once. But sliding window is more memory-intensive but fairer. Fixed window is simple but has that boundary problem where you can get 2x your limit by hitting the boundary just right.</p>
@@ -189,8 +244,8 @@
 <p class="host-line host-a"><span class="host-label">Alex</span> *groans* Don&#x27;t even get me started. You need batching, you need proper Redis clustering, maybe even eventual consistency. Stripe actually does some clever stuff here with multiple Redis instances and reconciliation.</p>
 <p class="host-line host-b"><span class="host-label">Blake</span> And what happens when Redis goes down? Do we just... let everyone through?</p>
 <p class="host-line host-a"><span class="host-label">Alex</span> That&#x27;s the classic fail-open vs fail-closed dilemma. Most companies fail open because availability trumps perfect rate limiting. But then you need local fallbacks, circuit breakers, the whole nine yards.</p>
-<hr style="border:none; border-top:1px solid var(--light-tan); margin:16px 0;" />
-<h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--warm-brown); margin:20px 0 10px;">Segment 4: How They Actually Built It (~2 min)</h3>
+<hr style="border:none; border-top:1px solid rgba(255,255,255,0.1); margin:16px 0;" />
+<h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#a78bfa; margin:20px 0 10px;">Segment 4: How They Actually Built It (~2 min)</h3>
 <p class="host-line host-a"><span class="host-label">Alex</span> So how does Stripe actually handle this in production? They&#x27;re processing billions of API requests with sub-millisecond latency impact.</p>
 <p class="host-line host-b"><span class="host-label">Blake</span> I read their blog post — they use Redis with sliding window counters, but the clever part is how they batch operations and use Lua scripts for atomicity.</p>
 <p class="host-line host-a"><span class="host-label">Alex</span> Right! And Cloudflare takes it even further — they do rate limiting at their edge network level. So they&#x27;re blocking bad traffic before it even hits your servers. That&#x27;s like having bouncers at every entrance to the city, not just your building.</p>
@@ -198,8 +253,8 @@
 <p class="host-line host-a"><span class="host-label">Alex</span> *laughs* Oh I bet. Twitter&#x27;s approach during high-traffic events is fascinating too. They basically have multiple tiers — aggressive limiting for suspicious patterns, but they relax limits for verified accounts during major news events.</p>
 <p class="host-line host-b"><span class="host-label">Blake</span> Makes sense. You don&#x27;t want to rate limit the President&#x27;s Twitter account during a crisis because your algorithm thinks they&#x27;re tweeting too much.</p>
 <p class="host-line host-a"><span class="host-label">Alex</span> Exactly! The real world is messier than the textbook version. You need business logic, special cases, and a lot of monitoring to see how your limits affect real user behavior.</p>
-<hr style="border:none; border-top:1px solid var(--light-tan); margin:16px 0;" />
-<h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--warm-brown); margin:20px 0 10px;">Segment 5: Interview Tips (~1 min)</h3>
+<hr style="border:none; border-top:1px solid rgba(255,255,255,0.1); margin:16px 0;" />
+<h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#a78bfa; margin:20px 0 10px;">Segment 5: Interview Tips (~1 min)</h3>
 <p class="host-line host-a"><span class="host-label">Alex</span> Alright, rapid-fire interview tips for this one...</p>
 <p class="host-line host-b"><span class="host-label">Blake</span> First — always ask about the specific use case. Rate limiting for a payment API is very different from rate limiting for social media posts.</p>
 <p class="host-line host-a"><span class="host-label">Alex</span> Yes! And don&#x27;t just jump to Redis. Ask about latency requirements first. Sometimes in-memory with periodic sync is fine, sometimes you need a full distributed consensus system.</p>
@@ -211,9 +266,9 @@
 <p class="host-line host-a"><span class="host-label">Alex</span> Alright, that wraps up Episode 2 of Byte by Design! If you found this useful, share it with a fellow engineer who&#x27;s prepping for system design interviews.</p>
 <p class="host-line host-b"><span class="host-label">Blake</span> And next time, we&#x27;re diving into chat systems — WebSockets, message queues, and all the fun challenges of building real-time messaging at scale. See you then!</p>
 <p class="host-line host-a"><span class="host-label">Alex</span> See you next week!</p>
-<hr style="border:none; border-top:1px solid var(--light-tan); margin:16px 0;" />
-<h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--warm-brown); margin:20px 0 10px;">References</h3>
-<h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--warm-brown); margin:20px 0 10px;">Architecture Diagram</h3>
+<hr style="border:none; border-top:1px solid rgba(255,255,255,0.1); margin:16px 0;" />
+<h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#a78bfa; margin:20px 0 10px;">References</h3>
+<h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#a78bfa; margin:20px 0 10px;">Architecture Diagram</h3>
         </div>
       </section>
 

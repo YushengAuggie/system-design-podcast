@@ -204,67 +204,73 @@ const DATA = {
       "id": "client_app",
       "label": "Client Applications",
       "type": "client",
-      "description": "Mobile apps, web clients, and third-party applications making API requests to the system."
+      "description": "Mobile apps, web browsers, and API clients making requests to the system."
     },
     {
       "id": "load_balancer",
       "label": "Load Balancer",
       "type": "server",
-      "description": "Distributes incoming requests across multiple API gateway instances with basic rate limiting capabilities."
+      "description": "Distributes incoming requests across multiple API gateway instances with basic rate limiting."
     },
     {
       "id": "api_gateway",
       "label": "API Gateway",
       "type": "server",
-      "description": "Primary entry point that enforces rate limits, authenticates requests, and routes to backend services."
+      "description": "Primary entry point that enforces rate limits, authentication, and routes requests to backend services."
     },
     {
       "id": "rate_limiter_service",
       "label": "Rate Limiter Service",
       "type": "service",
-      "description": "Core service implementing rate limiting algorithms and managing counter operations across distributed nodes."
+      "description": "Core rate limiting logic implementing token bucket and sliding window algorithms."
     },
     {
       "id": "redis_cluster",
       "label": "Redis Cluster",
       "type": "cache",
-      "description": "Distributed cache storing rate limit counters with sub-millisecond latency for high-throughput operations."
+      "description": "Distributed cache storing rate limit counters and user quotas with sub-millisecond access."
     },
     {
       "id": "config_store",
       "label": "Configuration Store",
       "type": "database",
-      "description": "Persistent storage for rate limit rules, user tiers, and endpoint-specific configurations."
+      "description": "Stores rate limit rules, user tiers, and endpoint-specific limits with versioning."
     },
     {
       "id": "backend_services",
       "label": "Backend Services",
       "type": "service",
-      "description": "Downstream microservices that process legitimate requests after rate limit validation."
+      "description": "Downstream microservices handling business logic after rate limit validation."
     },
     {
       "id": "metrics_collector",
       "label": "Metrics Collector",
       "type": "monitoring",
-      "description": "Collects rate limiting metrics, violation patterns, and system performance data for analysis."
+      "description": "Collects rate limiting metrics, violations, and system performance data."
     },
     {
-      "id": "async_processor",
-      "label": "Async Processor",
+      "id": "async_queue",
+      "label": "Async Processing Queue",
       "type": "queue",
-      "description": "Handles non-critical rate limit updates and batch operations to reduce latency impact."
+      "description": "Handles non-critical rate limit updates and batch processing to reduce latency."
     },
     {
       "id": "circuit_breaker",
       "label": "Circuit Breaker",
       "type": "service",
-      "description": "Provides fallback mechanisms when rate limiting infrastructure becomes unavailable."
+      "description": "Provides fallback mechanism when rate limiter service becomes unavailable."
     },
     {
       "id": "monitoring_dashboard",
       "label": "Monitoring Dashboard",
       "type": "monitoring",
-      "description": "Real-time visualization of rate limiting effectiveness, system health, and abuse detection."
+      "description": "Real-time visualization of rate limiting effectiveness and system health."
+    },
+    {
+      "id": "admin_console",
+      "label": "Admin Console",
+      "type": "client",
+      "description": "Administrative interface for configuring rate limits and monitoring violations."
     }
   ],
   "edges": [
@@ -300,13 +306,13 @@ const DATA = {
     },
     {
       "from": "rate_limiter_service",
-      "to": "async_processor",
-      "label": "Message Queue"
+      "to": "async_queue",
+      "label": "Pub/Sub"
     },
     {
       "from": "rate_limiter_service",
       "to": "metrics_collector",
-      "label": "Metrics"
+      "label": "UDP"
     },
     {
       "from": "api_gateway",
@@ -316,19 +322,30 @@ const DATA = {
     {
       "from": "metrics_collector",
       "to": "monitoring_dashboard",
-      "label": "Data Stream"
+      "label": "WebSocket"
     },
     {
-      "from": "async_processor",
-      "to": "redis_cluster",
-      "label": "Batch Updates"
+      "from": "admin_console",
+      "to": "config_store",
+      "label": "HTTPS"
+    },
+    {
+      "from": "admin_console",
+      "to": "monitoring_dashboard",
+      "label": "HTTPS"
     }
   ],
   "groups": [
     {
-      "label": "Edge Layer",
+      "label": "Client Layer",
       "nodeIds": [
         "client_app",
+        "admin_console"
+      ]
+    },
+    {
+      "label": "Gateway Layer",
+      "nodeIds": [
         "load_balancer",
         "api_gateway"
       ]
@@ -337,28 +354,28 @@ const DATA = {
       "label": "Rate Limiting Core",
       "nodeIds": [
         "rate_limiter_service",
-        "circuit_breaker",
-        "async_processor"
+        "circuit_breaker"
       ]
     },
     {
       "label": "Data Layer",
       "nodeIds": [
         "redis_cluster",
-        "config_store"
-      ]
-    },
-    {
-      "label": "Monitoring & Observability",
-      "nodeIds": [
-        "metrics_collector",
-        "monitoring_dashboard"
+        "config_store",
+        "async_queue"
       ]
     },
     {
       "label": "Application Layer",
       "nodeIds": [
         "backend_services"
+      ]
+    },
+    {
+      "label": "Observability",
+      "nodeIds": [
+        "metrics_collector",
+        "monitoring_dashboard"
       ]
     }
   ]
