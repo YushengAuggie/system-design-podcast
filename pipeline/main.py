@@ -22,7 +22,7 @@ from pipeline.steps.review import run_review
 from pipeline.steps.screenshot import run_screenshot
 from pipeline.steps.script import run_script
 from pipeline.steps.voices import run_voices
-from pipeline.steps.article import run_article
+from pipeline.steps.article import run_article, run_article_zh
 from pipeline.steps.website import run_website
 from pipeline.steps.youtube import run_youtube
 from pipeline.steps.final_review import run_final_review
@@ -30,7 +30,7 @@ from pipeline.utils import episode_dir, load_json, load_text, save_json, save_te
 
 # Ordered pipeline steps
 STEPS = [
-    "research", "script", "review", "article", "voices", "audio",
+    "research", "script", "review", "article", "article_zh", "voices", "audio",
     "diagram", "diagram_review", "screenshot",
     "youtube", "podcast", "website", "final_review",
 ]
@@ -198,6 +198,38 @@ def run_pipeline(
             save_text(ep_dir / "article.md", article_result.output)
         else:
             print(f"\nWarning: Article generation failed — {article_result.message} (non-fatal)")
+
+    # --- Step: Chinese Article Generation ---
+    if "article_zh" in steps_to_run:
+        # Load English article (from previous step in this run, or from disk)
+        article_path = ep_dir / "article.md"
+        english_article = ""
+        if article_path.exists():
+            english_article = load_text(article_path)
+        if not research_data:
+            research_path = ep_dir / "research.json"
+            if research_path.exists():
+                research_data = load_json(research_path)
+
+        if not english_article:
+            print("  Skipping Chinese article: article.md not available (non-fatal)")
+        else:
+            _print_step("Chinese Article Generation", "running")
+            article_zh_result = run_article_zh(
+                topic=topic,
+                english_article=english_article,
+                research=research_data,
+                dry_run=dry_run,
+            )
+            _print_step(
+                "Chinese Article Generation",
+                "passed" if article_zh_result.passed else "failed",
+                article_zh_result.message,
+            )
+            if article_zh_result.passed:
+                save_text(ep_dir / "article_zh.md", article_zh_result.output)
+            else:
+                print(f"\nWarning: Chinese article generation failed — {article_zh_result.message} (non-fatal)")
 
     # --- Step: Voice Selection ---
     if "voices" in steps_to_run:

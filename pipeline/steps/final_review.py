@@ -56,6 +56,8 @@ def _check_1_files(ep_dir: Path) -> list[dict]:
         "diagram.json": "Diagram data",
         "diagram.html": "Interactive diagram",
         "diagram.mmd": "Mermaid diagram (compat)",
+        "article.md": "English study guide",
+        "article_zh.md": "Chinese study guide",
     }
     optional = {
         "diagram.png": "Diagram screenshot",
