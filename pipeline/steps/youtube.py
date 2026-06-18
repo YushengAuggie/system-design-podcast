@@ -77,7 +77,11 @@ def _build_description(topic: str, research: dict) -> str:
     lines.append("---")
     lines.append("System Design Podcast | Building scalable systems, one episode at a time.")
 
-    return "\n".join(lines)
+    desc = "\n".join(lines)
+    # YouTube caps descriptions at 5000 chars; trim safely if needed.
+    if len(desc) > 4900:
+        desc = desc[:4900].rstrip() + "\n…"
+    return desc
 
 
 def _build_tags(topic: str, research: dict) -> list[str]:
@@ -94,22 +98,35 @@ def _build_tags(topic: str, research: dict) -> list[str]:
         topic.lower(),
     ]
 
-    # Add architecture component names as tags
+    # Add architecture component names as tags.
+    # YouTube rejects tags >30 chars, so take only the short, leading phrase
+    # (strip any parenthetical/descriptive tail) and drop anything still too long.
     for component in research.get("architecture_components", []):
         tag = component.lower().strip()
-        if tag and tag not in base_tags:
+        # Cut descriptive tails like "hash ring (circular ...)" -> "hash ring"
+        tag = re.split(r"[(/,]", tag)[0].strip()
+        if tag and len(tag) <= 30 and tag not in base_tags:
             base_tags.append(tag)
 
     # Deduplicate while preserving order
     seen: set[str] = set()
     unique_tags: list[str] = []
     for tag in base_tags:
-        if tag not in seen:
+        if tag and len(tag) <= 30 and tag not in seen:
             seen.add(tag)
             unique_tags.append(tag)
 
     # YouTube allows up to 500 characters total across all tags
-    return unique_tags[:20]
+    final_tags: list[str] = []
+    total = 0
+    for tag in unique_tags[:20]:
+        # +2 accounts for YouTube's per-tag quoting overhead when a tag has spaces
+        cost = len(tag) + (2 if " " in tag else 0)
+        if total + cost > 480:
+            break
+        final_tags.append(tag)
+        total += cost
+    return final_tags
 
 
 # ---------------------------------------------------------------------------

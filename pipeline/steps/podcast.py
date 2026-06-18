@@ -291,6 +291,15 @@ def update_rss_feed(
     for item in existing_items:
         channel.remove(item)
 
+    # Drop any existing item with the same guid as the new one (idempotent re-runs)
+    new_guid_el = new_item.find("guid")
+    new_guid = new_guid_el.text if new_guid_el is not None else None
+    if new_guid:
+        existing_items = [
+            it for it in existing_items
+            if (it.find("guid") is None or it.find("guid").text != new_guid)
+        ]
+
     # Add new item to the pool and sort descending by pubDate
     all_items = existing_items + [new_item]
     all_items.sort(key=_parse_pub_date, reverse=True)

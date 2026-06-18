@@ -48,7 +48,7 @@ ARTICLE_MIN_HEADINGS = 4
 
 # Chinese article quality gates (character-based, not word-based)
 ARTICLE_ZH_CHAR_MIN = 1500
-ARTICLE_ZH_CHAR_MAX = 4000
+ARTICLE_ZH_CHAR_MAX = 4800
 ARTICLE_ZH_MIN_HEADINGS = 4
 
 ARTICLE_ZH_SYSTEM = """\

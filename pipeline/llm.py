@@ -9,7 +9,7 @@ import openai
 
 # --- Poe API (OpenAI-compatible) ---
 POE_BASE_URL = "https://api.poe.com/v1"
-POE_DEFAULT_MODEL = "claude-sonnet-4"
+POE_DEFAULT_MODEL = "claude-sonnet-4.5"
 
 
 def _get_poe_client() -> openai.OpenAI:
